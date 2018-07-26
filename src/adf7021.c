@@ -74,18 +74,18 @@ void adf_write_reg(adf_reg_t *reg)
 		for (j=8; j>0; j--) {
 			PINCLEAR( SCLK );
 			if (byte & 0x80)
-				ADF_PORT_SDATA |= _BV(ADF_SDATA);
+				PINSET( SDATA );
 			else 
 				PINCLEAR( SDATA );
-			ADF_PORT_SCLK |= _BV(ADF_SCLK);
+			PINSET( SCLK );
 			byte += byte;
 		}
 		PINCLEAR( ADF_SCLK );
 	}
 
 	/* Strobe the latch */
-	ADF_PORT_SLE |= _BV(ADF_SLE);
-	ADF_PORT_SLE |= _BV(ADF_SLE);
+	PINSET( SLE );	// ??? Should be SDATA?
+	PINSET( SLE );
 	PINCLEAR( SDATA );
 	PINCLEAR( ADF_SLE );
 }
@@ -106,17 +106,17 @@ adf_reg_t adf_read_reg(unsigned int readback_config)
 	/* Read back value */
 	PINCLEAR( SDATA );
 	PINCLEAR( ADF_SCLK );
-	ADF_PORT_SLE |= _BV(ADF_SLE);
+	PINSET( SLE );
 
 	/* Clock in first bit and discard (DB16 is not used) */
-	ADF_PORT_SCLK |= _BV(ADF_SCLK);
+	PINSET( SCLK );
 	unsigned char byte = 0;
 	PINCLEAR( SCLK );
 
 	/* Clock in data MSbit first */
 	for (i=1; i>=0; i--) {
 		for (j=8; j>0; j--) {
-			ADF_PORT_SCLK |= _BV(ADF_SCLK);
+			PINSET( SCLK );
 			byte += byte;
 			if (ADF_PORT_IN_SREAD & _BV(ADF_SREAD))
 				byte |= 1;
@@ -125,7 +125,7 @@ adf_reg_t adf_read_reg(unsigned int readback_config)
 		register_value.byte[i] = byte;
 	}
 
-	ADF_PORT_SCLK |= _BV(ADF_SCLK);
+	PINSET( SCLK );
 	PINCLEAR( SLE );
 	PINCLEAR( SCLK );
 
@@ -138,27 +138,18 @@ void adf_set_power_on(unsigned long adf_xtal)
 	sys_conf.adf_xtal = adf_xtal;
 
 	/* Ensure the ADF GPIO port is correctly initialised */
-	/*
-	ADF_PORT_DIR_SWD 	&= ~_BV(ADF_SWD);
-	ADF_PORT_DIR_SCLK 	|=  _BV(ADF_SCLK);
-	ADF_PORT_DIR_SREAD	&= ~_BV(ADF_SREAD);
-	ADF_PORT_DIR_SDATA	|=  _BV(ADF_SDATA);
-	ADF_PORT_DIR_SLE	|=  _BV(ADF_SLE);
-	ADF_PORT_DIR_MUXOUT	&= ~_BV(ADF_MUXOUT);
-	ADF_PORT_DIR_CE		|=  _BV(ADF_CE);
-	*/
 	// -- Configure inputs
 	GPIO_PinModeSet(ADF_PORT_SWD, ADF_SWD, gpioModeInputPullFilter, 1);
 	GPIO_PinModeSet(ADF_PORT_SREAD, ADF_SREAD, gpioModeInputPullFilter, 1);
-	// GPIO_PinModeSet(ADF_PORT_MUXOUT, ADF_MUXOUT, gpioModeInputPullFilter, 1);
+	// unused? GPIO_PinModeSet(ADF_PORT_MUXOUT, ADF_MUXOUT, gpioModeInputPullFilter, 1);
 	// -- Configure outputs
 	GPIO_PinModeSet(ADF_PORT_SCLK, ADF_SCLK, gpioModePushPull, 0);
 	GPIO_PinModeSet(ADF_PORT_SDATA, ADF_SDATA, gpioModePushPull, 0);
 	GPIO_PinModeSet(ADF_PORT_SLE, ADF_SLE, gpioModePushPull, 0);
 	GPIO_PinModeSet(ADF_PORT_CE, ADF_CE, gpioModePushPull, 0);
 
-	
-	GPIO_PinOutSet( ADF_PORT_CE, ADF_CE );
+	// Enable the ADF
+	PINSET( CE );
 
 	/* write R1, Turn on Internal VCO */
 	sys_conf.r1.address_bits 	= 1;
