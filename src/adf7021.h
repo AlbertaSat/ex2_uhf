@@ -27,41 +27,49 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if defined(BBSTANDARD)
-#define ADF_PORT_SWD		PORTE
-#define ADF_PORT_IN_SWD		PINE
-#define ADF_PORT_DIR_SWD	DDRE
-#define ADF_SWD 		6
+//#include "em_device.h"
+#include "em_chip.h"
 
-#define ADF_PORT_SCLK		PORTC
-#define ADF_PORT_IN_SCLK	PINC
-#define ADF_PORT_DIR_SCLK	DDRC
-#define ADF_SCLK 		7
+#define HW_VER_PROTOTYPE
 
-#define ADF_PORT_SREAD		PORTC
-#define ADF_PORT_IN_SREAD	PINC
-#define ADF_PORT_DIR_SREAD	DDRC
-#define ADF_SREAD 		6
+#if defined(HW_VER_PROTOTYPE)
+#define ADF_PORT_SWD		gpioPortD
+#define ADF_PORT_IN_SWD		PIND
+//#define ADF_PORT_DIR_SWD	DDRD
+#define ADF_SWD 		7
 
-#define ADF_PORT_SDATA		PORTB
-#define ADF_PORT_IN_SDATA	PINB
-#define ADF_PORT_DIR_SDATA	DDRB
-#define ADF_SDATA 		6
+#define ADF_PORT_SCLK		gpioPortA
+#define ADF_PORT_IN_SCLK	PINA
+//#define ADF_PORT_DIR_SCLK	DDRC
+#define ADF_SCLK 		8
 
-#define ADF_PORT_SLE		PORTB
-#define ADF_PORT_IN_SLE		PINB
-#define ADF_PORT_DIR_SLE	DDRB
-#define ADF_SLE 		5
+#define ADF_PORT_SREAD		gpioPortD
+#define ADF_PORT_IN_SREAD	PIND
+//#define ADF_PORT_DIR_SREAD	DDRC
+#define ADF_SREAD 		10
 
+#define ADF_PORT_SDATA		gpioPortD
+#define ADF_PORT_IN_SDATA	PIND
+//#define ADF_PORT_DIR_SDATA	DDRB
+#define ADF_SDATA 		12
+
+#define ADF_PORT_SLE		gpioPortD
+#define ADF_PORT_IN_SLE		PIND
+//#define ADF_PORT_DIR_SLE	DDRB
+#define ADF_SLE 		11
+
+/* Not used
 #define ADF_PORT_MUXOUT		PORTD
 #define ADF_PORT_IN_MUXOUT	PIND
 #define ADF_PORT_DIR_MUXOUT	DDRD
 #define ADF_MUXOUT 		6
+*/
 
-#define ADF_PORT_CE		PORTD
+#define ADF_PORT_CE		gpioPortD
 #define ADF_PORT_IN_CE		PIND
-#define ADF_PORT_DIR_CE		DDRD
-#define ADF_CE 			7
+//#define ADF_PORT_DIR_CE		DDRD
+#define ADF_CE 			8
+
 #elif defined(BBMICRO)
 #define ADF_PORT_SWD		PORTB
 #define ADF_PORT_IN_SWD		PINB
