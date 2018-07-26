@@ -24,16 +24,19 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <avr/sfr_defs.h>
-#include <avr/interrupt.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-#include <util/delay.h>
+
+#ifdef __AVR__
+#	include <avr/sfr_defs.h>
+#	include <avr/interrupt.h>
+#	include <avr/io.h>
+#	include <avr/pgmspace.h>
+#	include <util/delay.h>
+#endif // def __AVR__
 
 #include "adf7021.h"
-#include "bluebox.h"
-#include "ptt.h"
-#include "led.h"
+//#include "bluebox.h"
+//#include "ptt.h"
+//#include "led.h"
 
 static adf_conf_t rx_conf, tx_conf;
 static adf_sysconf_t sys_conf;
@@ -53,35 +56,38 @@ enum {
 	ADF_PA_ON
 } adf_pa_state;
 
+#define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PORT_#PINNAME, ADF_##PINNAME );
+#define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PORT_##PINNAME, ADF_##PINNAME );
+
 void adf_write_reg(adf_reg_t *reg)
 {
 	signed char i, j;
 	unsigned char byte;
 
-	ADF_PORT_SLE &= ~_BV(ADF_SLE);
-	ADF_PORT_SCLK &= ~_BV(ADF_SCLK);
+	PINCLEAR( SLE );
+	PINCLEAR( SCLK );
 
 	/* Clock data out MSbit first */
 	for (i=3; i>=0; i--) {
 		byte = reg->byte[i];
 
 		for (j=8; j>0; j--) {
-			ADF_PORT_SCLK &= ~_BV(ADF_SCLK);
+			PINCLEAR( SCLK );
 			if (byte & 0x80)
 				ADF_PORT_SDATA |= _BV(ADF_SDATA);
 			else 
-				ADF_PORT_SDATA &= ~_BV(ADF_SDATA);
+				PINCLEAR( SDATA );
 			ADF_PORT_SCLK |= _BV(ADF_SCLK);
 			byte += byte;
 		}
-		ADF_PORT_SCLK &= ~_BV(ADF_SCLK);
+		PINCLEAR( ADF_SCLK );
 	}
 
 	/* Strobe the latch */
 	ADF_PORT_SLE |= _BV(ADF_SLE);
 	ADF_PORT_SLE |= _BV(ADF_SLE);
-	ADF_PORT_SDATA &= ~_BV(ADF_SDATA);
-	ADF_PORT_SDATA &= ~_BV(ADF_SLE);
+	PINCLEAR( SDATA );
+	PINCLEAR( ADF_SLE );
 }
 
 adf_reg_t adf_read_reg(unsigned int readback_config)
@@ -98,14 +104,14 @@ adf_reg_t adf_read_reg(unsigned int readback_config)
 	register_value.whole_reg = 0;
 
 	/* Read back value */
-	ADF_PORT_SDATA &= ~_BV(ADF_SDATA);
-	ADF_PORT_SCLK &= ~_BV(ADF_SCLK);
+	PINCLEAR( SDATA );
+	PINCLEAR( ADF_SCLK );
 	ADF_PORT_SLE |= _BV(ADF_SLE);
 
 	/* Clock in first bit and discard (DB16 is not used) */
 	ADF_PORT_SCLK |= _BV(ADF_SCLK);
 	unsigned char byte = 0;
-	ADF_PORT_SCLK &= ~_BV(ADF_SCLK);
+	PINCLEAR( SCLK );
 
 	/* Clock in data MSbit first */
 	for (i=1; i>=0; i--) {
@@ -114,14 +120,14 @@ adf_reg_t adf_read_reg(unsigned int readback_config)
 			byte += byte;
 			if (ADF_PORT_IN_SREAD & _BV(ADF_SREAD))
 				byte |= 1;
-			ADF_PORT_SCLK &= ~_BV(ADF_SCLK);
+			PINCLEAR( SCLK );
 		}
 		register_value.byte[i] = byte;
 	}
 
 	ADF_PORT_SCLK |= _BV(ADF_SCLK);
-	ADF_PORT_SLE &= ~_BV(ADF_SLE);
-	ADF_PORT_SCLK &= ~_BV(ADF_SCLK);
+	PINCLEAR( SLE );
+	PINCLEAR( SCLK );
 
 	return register_value;
 }
@@ -132,6 +138,7 @@ void adf_set_power_on(unsigned long adf_xtal)
 	sys_conf.adf_xtal = adf_xtal;
 
 	/* Ensure the ADF GPIO port is correctly initialised */
+	/*
 	ADF_PORT_DIR_SWD 	&= ~_BV(ADF_SWD);
 	ADF_PORT_DIR_SCLK 	|=  _BV(ADF_SCLK);
 	ADF_PORT_DIR_SREAD	&= ~_BV(ADF_SREAD);
@@ -139,8 +146,19 @@ void adf_set_power_on(unsigned long adf_xtal)
 	ADF_PORT_DIR_SLE	|=  _BV(ADF_SLE);
 	ADF_PORT_DIR_MUXOUT	&= ~_BV(ADF_MUXOUT);
 	ADF_PORT_DIR_CE		|=  _BV(ADF_CE);
+	*/
+	// -- Configure inputs
+	GPIO_PinModeSet(ADF_PORT_SWD, ADF_SWD, gpioModeInputPullFilter, 1);
+	GPIO_PinModeSet(ADF_PORT_SREAD, ADF_SREAD, gpioModeInputPullFilter, 1);
+	// GPIO_PinModeSet(ADF_PORT_MUXOUT, ADF_MUXOUT, gpioModeInputPullFilter, 1);
+	// -- Configure outputs
+	GPIO_PinModeSet(ADF_PORT_SCLK, ADF_SCLK, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PORT_SDATA, ADF_SDATA, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PORT_SLE, ADF_SLE, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PORT_CE, ADF_CE, gpioModePushPull, 0);
+
 	
-	ADF_PORT_CE 		|= _BV(ADF_CE);
+	GPIO_PinOutSet( ADF_PORT_CE, ADF_CE );
 
 	/* write R1, Turn on Internal VCO */
 	sys_conf.r1.address_bits 	= 1;
@@ -188,7 +206,7 @@ void adf_set_power_on(unsigned long adf_xtal)
 void adf_set_power_off()
 {
 	/* Turn off chip enable */
-	ADF_PORT_CE &= ~_BV(ADF_CE);
+	PINCLEAR( CE );
 
 	adf_state = ADF_OFF;
 	adf_pa_state = ADF_PA_OFF;
