@@ -31,11 +31,6 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_gpio.c</locationURI>
 		</link>
 		<link>
-			<name>emlib/em_system.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_system.c</locationURI>
-		</link>
-		<link>
 			<name>CMSIS/EFM32PG12B/startup_gcc_efm32pg12b.s</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/Device/SiliconLabs/EFM32PG12B/Source/GCC/startup_efm32pg12b.S</locationURI>
