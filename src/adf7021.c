@@ -37,12 +37,41 @@
 //#include "bluebox.h"
 //#include "ptt.h"
 //#include "led.h"
+#define BLUEBOX_UNUSED( f )	// Ignore Bluebox-specific functionality
 
 static adf_conf_t rx_conf, tx_conf;
 static adf_sysconf_t sys_conf;
 static uint32_t adf_current_syncword;
 
-extern struct bluebox_config conf;
+//extern struct bluebox_config conf;
+struct adf_config {
+	//uint8_t flags;
+	uint32_t tx_freq;
+	uint32_t rx_freq;
+	//int16_t csma_rssi;
+	uint16_t bitrate;
+	uint8_t modindex;
+	uint8_t pa_setting;
+	uint8_t afc_range;
+	uint8_t afc_ki;
+	uint8_t afc_kp;
+	uint8_t afc_enable;
+	uint8_t if_bw;
+	uint32_t sw;
+	uint8_t swtol;
+	uint8_t swlen;
+	//uint8_t do_rs;
+	//uint8_t do_viterbi;
+	//uint8_t training_symbol;
+	//uint16_t training_ms;
+	//uint16_t training_inter_ms;
+	//char callsign[CALLSIGN_LENGTH];
+	//uint32_t tx;
+	//uint32_t rx;
+	//uint16_t ptt_delay_high;
+	//uint16_t ptt_delay_low;
+	//char *fw_revision;
+} conf;
 
 enum {
 	ADF_OFF,
@@ -56,8 +85,9 @@ enum {
 	ADF_PA_ON
 } adf_pa_state;
 
-#define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PORT_#PINNAME, ADF_##PINNAME );
-#define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PORT_##PINNAME, ADF_##PINNAME );
+#define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PORT_##PINNAME, ADF_##PINNAME )
+#define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PORT_##PINNAME, ADF_##PINNAME )
+#define PINREAD( PINNAME )  GPIO_PinInGet( ADF_PORT_##PINNAME, ADF_##PINNAME )
 
 void adf_write_reg(adf_reg_t *reg)
 {
@@ -80,14 +110,14 @@ void adf_write_reg(adf_reg_t *reg)
 			PINSET( SCLK );
 			byte += byte;
 		}
-		PINCLEAR( ADF_SCLK );
+		PINCLEAR( SCLK );
 	}
 
 	/* Strobe the latch */
 	PINSET( SLE );	// ??? Should be SDATA?
 	PINSET( SLE );
 	PINCLEAR( SDATA );
-	PINCLEAR( ADF_SLE );
+	PINCLEAR( SLE );
 }
 
 adf_reg_t adf_read_reg(unsigned int readback_config)
@@ -105,7 +135,7 @@ adf_reg_t adf_read_reg(unsigned int readback_config)
 
 	/* Read back value */
 	PINCLEAR( SDATA );
-	PINCLEAR( ADF_SCLK );
+	PINCLEAR( SCLK );
 	PINSET( SLE );
 
 	/* Clock in first bit and discard (DB16 is not used) */
@@ -118,7 +148,7 @@ adf_reg_t adf_read_reg(unsigned int readback_config)
 		for (j=8; j>0; j--) {
 			PINSET( SCLK );
 			byte += byte;
-			if (ADF_PORT_IN_SREAD & _BV(ADF_SREAD))
+			if (PINREAD( SREAD ))
 				byte |= 1;
 			PINCLEAR( SCLK );
 		}
@@ -417,8 +447,8 @@ void adf_set_rx_mode(void)
 		adf_write_reg(&rx_conf.r4_reg);
 	}
 
-	led_off(LED_TRANSMIT);
-	ptt_low(conf.ptt_delay_low);
+	BLUEBOX_UNUSED( led_off(LED_TRANSMIT) );
+	BLUEBOX_UNUSED( ptt_low(conf.ptt_delay_low) );
 
 	adf_state = ADF_RX;
 }
@@ -431,8 +461,8 @@ void adf_set_tx_mode(void)
 		adf_pa_state = ADF_PA_ON;
 	}
 
-	ptt_high(conf.ptt_delay_high);
-	led_on(LED_TRANSMIT);
+	BLUEBOX_UNUSED( ptt_high(conf.ptt_delay_high) );
+	BLUEBOX_UNUSED( led_on(LED_TRANSMIT) );
 
 	if (adf_state == ADF_RX) {
 		if (rx_conf.r3_reg.whole_reg != tx_conf.r3_reg.whole_reg)
@@ -469,6 +499,7 @@ int adf_readback_afc(void)
 	adf_reg_t readback = adf_read_reg(0x10);
 	return 100000 - round(readback.word.lower * ((uint32_t)XTAL_FREQ >> 18));
 }
+
 
 signed int adf_readback_temp(void)
 {

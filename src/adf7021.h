@@ -30,9 +30,14 @@
 //#include "em_device.h"
 #include "em_chip.h"
 
-#define HW_VER_PROTOTYPE
+/* Board xtal frequency (MCU clock frequency???) */
+//bluebox: #define XTAL_FREQ 		16000000
+#define XTAL_FREQ 		32000000
 
-#if defined(HW_VER_PROTOTYPE)
+
+// Put in project settings: #define EX2_DEVBOARD
+
+#if defined(EX2_DEVBOARD)
 #define ADF_PORT_SWD		gpioPortD
 #define ADF_PORT_IN_SWD		PIND
 //#define ADF_PORT_DIR_SWD	DDRD
@@ -105,6 +110,10 @@
 #define ADF_PORT_IN_CE		PIND
 #define ADF_PORT_DIR_CE		DDRD
 #define ADF_CE 			5
+#else
+#	error ADF not configured!
+#	error For Ex2 devs, please select a "DevBoard" build, as it's the only ones configured right now.'
+
 #endif
 
 typedef union
