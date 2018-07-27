@@ -8,6 +8,6 @@ If you get build errors like "undefined symbol `__Vectors' referenced in express
 it may be due to missing build directories and a buggy Simplicity Studios overwriting the project file with a bad one.
 Fix:
 1. Close the project
-2. git checkout .project
+2. git checkout ex2_uhf_prototype/.project
 3. Open and build the project again.
 
