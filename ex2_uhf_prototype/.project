@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>ex2_uhf</name>
+	<name>ex2_uhf_prototype</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -31,6 +31,41 @@
 			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/bsp/bsp_stk_leds.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/display.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/display.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/displayls013b7dh03.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/displayls013b7dh03.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/displaypalemlib.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/displaypalemlib.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/retargetio.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/retargetio.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/retargettextdisplay.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/retargettextdisplay.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/textdisplay.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/textdisplay.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/udelay.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/udelay.c</locationURI>
+		</link>
+		<link>
 			<name>emlib/em_assert.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_assert.c</locationURI>
@@ -39,6 +74,11 @@
 			<name>emlib/em_cmu.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_cmu.c</locationURI>
+		</link>
+		<link>
+			<name>emlib/em_core.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_core.c</locationURI>
 		</link>
 		<link>
 			<name>emlib/em_emu.c</name>
@@ -51,9 +91,24 @@
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_gpio.c</locationURI>
 		</link>
 		<link>
+			<name>emlib/em_prs.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_prs.c</locationURI>
+		</link>
+		<link>
+			<name>emlib/em_rtcc.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_rtcc.c</locationURI>
+		</link>
+		<link>
 			<name>emlib/em_system.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_system.c</locationURI>
+		</link>
+		<link>
+			<name>emlib/em_usart.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_usart.c</locationURI>
 		</link>
 		<link>
 			<name>CMSIS/EFM32PG12B/startup_gcc_efm32pg12b.s</name>
