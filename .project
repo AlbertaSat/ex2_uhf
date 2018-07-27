@@ -26,6 +26,26 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>BSP/bsp_stk_leds.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/bsp/bsp_stk_leds.c</locationURI>
+		</link>
+		<link>
+			<name>emlib/em_assert.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_assert.c</locationURI>
+		</link>
+		<link>
+			<name>emlib/em_cmu.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_cmu.c</locationURI>
+		</link>
+		<link>
+			<name>emlib/em_emu.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_emu.c</locationURI>
+		</link>
+		<link>
 			<name>emlib/em_gpio.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_gpio.c</locationURI>
@@ -34,6 +54,16 @@
 			<name>emlib/em_system.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_system.c</locationURI>
+		</link>
+		<link>
+			<name>CMSIS/EFM32PG12B/startup_gcc_efm32pg12b.s</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/Device/SiliconLabs/EFM32PG12B/Source/GCC/startup_efm32pg12b.S</locationURI>
+		</link>
+		<link>
+			<name>CMSIS/EFM32PG12B/system_efm32pg12b.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/Device/SiliconLabs/EFM32PG12B/Source/system_efm32pg12b.c</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
