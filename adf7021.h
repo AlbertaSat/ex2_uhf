@@ -28,93 +28,62 @@
 #include <stdbool.h>
 
 //#include "em_device.h"
-#include "em_chip.h"
+//#include "em_chip.h"
 
 /* Board xtal frequency (MCU clock frequency???) */
-//bluebox: #define XTAL_FREQ 		16000000
-#define XTAL_FREQ 		32000000
+//bluebox:
+#define XTAL_FREQ 		16000000
+//#define XTAL_FREQ 		14000000
 
 
-// Put in project settings: #define EX2_DEVBOARD
+#ifdef EX2_DEVBOARD
 
-#if defined(EX2_DEVBOARD)
-#define ADF_PORT_SWD		gpioPortD
-#define ADF_PORT_IN_SWD		PIND
-//#define ADF_PORT_DIR_SWD	DDRD
-#define ADF_SWD 		7
+#define ADF_PIN_SWD		gpioPortA, 9
+#define ADF_PIN_SCLK	gpioPortD, 9
+#define ADF_PIN_SREAD	gpioPortD, 10
+#define ADF_PIN_SDATA	gpioPortC, 10
+#define ADF_PIN_SLE		gpioPortD, 11
+#define ADF_PIN_MUXOUT	gpioPortD, 12
+#define ADF_PIN_CE		gpioPortD, 8
 
-#define ADF_PORT_SCLK		gpioPortA
-#define ADF_PORT_IN_SCLK	PINA
-//#define ADF_PORT_DIR_SCLK	DDRC
-#define ADF_SCLK 		8
 
-#define ADF_PORT_SREAD		gpioPortD
-#define ADF_PORT_IN_SREAD	PIND
-//#define ADF_PORT_DIR_SREAD	DDRC
-#define ADF_SREAD 		10
-
-#define ADF_PORT_SDATA		gpioPortD
-#define ADF_PORT_IN_SDATA	PIND
-//#define ADF_PORT_DIR_SDATA	DDRB
-#define ADF_SDATA 		12
-
-#define ADF_PORT_SLE		gpioPortD
-#define ADF_PORT_IN_SLE		PIND
-//#define ADF_PORT_DIR_SLE	DDRB
-#define ADF_SLE 		11
-
-/* Not used
-#define ADF_PORT_MUXOUT		PORTD
-#define ADF_PORT_IN_MUXOUT	PIND
-#define ADF_PORT_DIR_MUXOUT	DDRD
-#define ADF_MUXOUT 		6
-*/
-
-#define ADF_PORT_CE		gpioPortD
-#define ADF_PORT_IN_CE		PIND
-//#define ADF_PORT_DIR_CE		DDRD
-#define ADF_CE 			8
-
-#elif defined(BBMICRO)
-#define ADF_PORT_SWD		PORTB
-#define ADF_PORT_IN_SWD		PINB
-#define ADF_PORT_DIR_SWD	DDRB
-#define ADF_SWD 		5
+#elif defined(BBSTANDARD)
+// Example configuration for AVR chips
+#define ADF_PORT_SWD		PORTE
+#define ADF_PORT_IN_SWD		PINE
+#define ADF_PORT_DIR_SWD	DDRE
+#define ADF_SWD 		6
 
 #define ADF_PORT_SCLK		PORTC
 #define ADF_PORT_IN_SCLK	PINC
 #define ADF_PORT_DIR_SCLK	DDRC
-#define ADF_SCLK 		2
+#define ADF_SCLK 		7
 
 #define ADF_PORT_SREAD		PORTC
 #define ADF_PORT_IN_SREAD	PINC
 #define ADF_PORT_DIR_SREAD	DDRC
-#define ADF_SREAD 		4
+#define ADF_SREAD 		6
 
-#define ADF_PORT_SDATA		PORTC
-#define ADF_PORT_IN_SDATA	PINC
-#define ADF_PORT_DIR_SDATA	DDRC
-#define ADF_SDATA 		5
+#define ADF_PORT_SDATA		PORTB
+#define ADF_PORT_IN_SDATA	PINB
+#define ADF_PORT_DIR_SDATA	DDRB
+#define ADF_SDATA 		6
 
-#define ADF_PORT_SLE		PORTC
-#define ADF_PORT_IN_SLE		PINC
-#define ADF_PORT_DIR_SLE	DDRC
-#define ADF_SLE 		6
+#define ADF_PORT_SLE		PORTB
+#define ADF_PORT_IN_SLE		PINB
+#define ADF_PORT_DIR_SLE	DDRB
+#define ADF_SLE 		5
 
 #define ADF_PORT_MUXOUT		PORTD
 #define ADF_PORT_IN_MUXOUT	PIND
 #define ADF_PORT_DIR_MUXOUT	DDRD
-#define ADF_MUXOUT 		1
+#define ADF_MUXOUT 		6
 
 #define ADF_PORT_CE		PORTD
 #define ADF_PORT_IN_CE		PIND
 #define ADF_PORT_DIR_CE		DDRD
-#define ADF_CE 			5
-#else
-#	error ADF not configured!
-#	error For Ex2 devs, please select a "DevBoard" build, as it's the only ones configured right now.'
-
-#endif
+#define ADF_CE 			7
+#endif //BBSTANDARD
 
 typedef union
 {
@@ -323,8 +292,11 @@ void adf_test_off(void);
 
 unsigned int adf_readback_version(void);
 signed int adf_readback_rssi(void);
+int adf_readback_rssi_raw(void);
 signed int adf_readback_afc(void);
-signed int adf_readback_temp(void);
+
+// Returns temperature reading in Celsius (resolution no better than 7.2 degrees)
+float adf_readback_temp(void);
 float adf_readback_voltage(void);
 void adf_configure(void);
 void adf_reset(void);

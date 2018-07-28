@@ -25,13 +25,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __AVR__
+
+// Platform-specific GPIO
+#ifndef __AVR__
+	// EFM32...
+#	include "em_chip.h"
+
+#	define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PIN_##PINNAME )
+#	define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PIN_##PINNAME )
+#	define PINREAD( PINNAME )  GPIO_PinInGet( ADF_PIN_##PINNAME )
+
+// A quick EFM32 alternative for missing function
+void delay_ms(int nDelay) {
+	// Just a ballpark, assuming 14MHz clock and about 4 cycles per iteration
+	int i = nDelay * (14000 / 4);
+	while (i--) { }
+}
+#else //__AVR__
 #	include <avr/sfr_defs.h>
 #	include <avr/interrupt.h>
 #	include <avr/io.h>
 #	include <avr/pgmspace.h>
 #	include <util/delay.h>
-#endif // def __AVR__
+
+#	define PINSET( PINNAME )	ADF_PORT_##PINNAME |= _BV( ADF_##PINNAME )
+#	define PINCLEAR( PINNAME )	ADF_PORT_##PINNAME &= ~_BV( ADF_##PINNAME )
+#	define PINREAD( PINNAME )	(ADF_PORT_##PINNAME & ADF_##PINNAME)
+#endif
+
 
 #include "adf7021.h"
 //#include "bluebox.h"
@@ -42,6 +63,31 @@
 static adf_conf_t rx_conf, tx_conf;
 static adf_sysconf_t sys_conf;
 static uint32_t adf_current_syncword;
+
+
+/* Default settings */
+#define FREQUENCY		437450000
+#define TX_WAIT_TIMEOUT		120U
+#define TX_TIMEOUT_DELAY	10U
+#define RX_WAIT_TIMEOUT		120U
+#define CSMA_RSSI		-50
+#define BAUD_RATE		2400
+#define MOD_INDEX		8
+#define PA_SETTING		0	// Was 8. 0 is off for testing...
+#define AFC_RANGE		10
+#define AFC_KI			11
+#define AFC_KP			4
+#define AFC_ENABLE		1
+#define IF_FILTER_BW		2
+#define SYNC_WORD		0x4f5a33	// xxx
+#define SYNC_WORD_TOLERANCE	ADF_SYNC_WORD_ERROR_TOLERANCE_3
+#define SYNC_WORD_BITS		ADF_SYNC_WORD_LEN_24
+#define TRAINING_SYMBOL		0x55
+#define TRAINING_MS		200
+#define TRAINING_INTER_MS	200
+#define PTT_DELAY_HIGH		100
+#define PTT_DELAY_LOW		100
+
 
 //extern struct bluebox_config conf;
 struct adf_config {
@@ -71,7 +117,35 @@ struct adf_config {
 	//uint16_t ptt_delay_high;
 	//uint16_t ptt_delay_low;
 	//char *fw_revision;
-} conf;
+} conf = {
+        //.flags = CONF_FLAG_NONE,
+        .tx_freq = FREQUENCY,
+        .rx_freq = FREQUENCY,
+        //.csma_rssi = CSMA_RSSI,
+        .bitrate = BAUD_RATE,
+        .modindex = MOD_INDEX,
+        .pa_setting = PA_SETTING,
+        .afc_range = AFC_RANGE,
+        .afc_ki = AFC_KI,
+        .afc_kp = AFC_KP,
+        .afc_enable = AFC_ENABLE,
+        .if_bw = IF_FILTER_BW,
+        .sw = SYNC_WORD,
+        .swtol = SYNC_WORD_TOLERANCE,
+        .swlen = SYNC_WORD_BITS,
+        /*.do_rs = true,
+        .do_viterbi = true,
+        .callsign = CALLSIGN,
+        .training_ms = TRAINING_MS,
+        .training_inter_ms = TRAINING_INTER_MS,
+        .training_symbol = TRAINING_SYMBOL,
+        .ptt_delay_high = PTT_DELAY_HIGH,
+        .ptt_delay_low = PTT_DELAY_LOW,
+        .tx = 0,
+        .rx = 0,
+        .fw_revision = FW_REVISION,
+        */
+};
 
 enum {
 	ADF_OFF,
@@ -85,9 +159,7 @@ enum {
 	ADF_PA_ON
 } adf_pa_state;
 
-#define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PORT_##PINNAME, ADF_##PINNAME )
-#define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PORT_##PINNAME, ADF_##PINNAME )
-#define PINREAD( PINNAME )  GPIO_PinInGet( ADF_PORT_##PINNAME, ADF_##PINNAME )
+
 
 void adf_write_reg(adf_reg_t *reg)
 {
@@ -114,8 +186,8 @@ void adf_write_reg(adf_reg_t *reg)
 	}
 
 	/* Strobe the latch */
-	PINSET( SLE );	// ??? Should be SDATA?
 	PINSET( SLE );
+	PINSET( SLE );	// Not sure why. Maybe add slight delay.
 	PINCLEAR( SDATA );
 	PINCLEAR( SLE );
 }
@@ -147,6 +219,7 @@ adf_reg_t adf_read_reg(unsigned int readback_config)
 	for (i=1; i>=0; i--) {
 		for (j=8; j>0; j--) {
 			PINSET( SCLK );
+			PINSET( SCLK );
 			byte += byte;
 			if (PINREAD( SREAD ))
 				byte |= 1;
@@ -167,16 +240,28 @@ void adf_set_power_on(unsigned long adf_xtal)
 	/* Store locally the oscillator frequency */
 	sys_conf.adf_xtal = adf_xtal;
 
-	/* Ensure the ADF GPIO port is correctly initialised */
+#ifdef _EFM_DEVICE
 	// -- Configure inputs
-	GPIO_PinModeSet(ADF_PORT_SWD, ADF_SWD, gpioModeInputPullFilter, 1);
-	GPIO_PinModeSet(ADF_PORT_SREAD, ADF_SREAD, gpioModeInputPullFilter, 1);
-	// unused? GPIO_PinModeSet(ADF_PORT_MUXOUT, ADF_MUXOUT, gpioModeInputPullFilter, 1);
+	GPIO_PinModeSet(ADF_PIN_SWD, gpioModeInput, 0);
+	GPIO_PinModeSet(ADF_PIN_SREAD, gpioModeInput, 0);
+	GPIO_PinModeSet(ADF_PIN_MUXOUT, gpioModeInput, 0);
 	// -- Configure outputs
-	GPIO_PinModeSet(ADF_PORT_SCLK, ADF_SCLK, gpioModePushPull, 0);
-	GPIO_PinModeSet(ADF_PORT_SDATA, ADF_SDATA, gpioModePushPull, 0);
-	GPIO_PinModeSet(ADF_PORT_SLE, ADF_SLE, gpioModePushPull, 0);
-	GPIO_PinModeSet(ADF_PORT_CE, ADF_CE, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PIN_SCLK, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PIN_SDATA, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PIN_SLE, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PIN_CE, gpioModePushPull, 0);
+#elif defined(__AVR__)
+	/* Ensure the ADF GPIO port is correctly initialised */
+	ADF_PORT_DIR_SWD 	&= ~_BV(ADF_SWD);
+	ADF_PORT_DIR_SCLK 	|=  _BV(ADF_SCLK);
+	ADF_PORT_DIR_SREAD	&= ~_BV(ADF_SREAD);
+	ADF_PORT_DIR_SDATA	|=  _BV(ADF_SDATA);
+	ADF_PORT_DIR_SLE	|=  _BV(ADF_SLE);
+	ADF_PORT_DIR_MUXOUT	&= ~_BV(ADF_MUXOUT);
+	ADF_PORT_DIR_CE		|=  _BV(ADF_CE);
+#else
+#	error Pins not configured!
+#endif
 
 	// Enable the ADF
 	PINSET( CE );
@@ -196,13 +281,15 @@ void adf_set_power_on(unsigned long adf_xtal)
 	sys_conf.r1.vco_inductor 	= 0;
 	adf_write_reg(&sys_conf.r1_reg);
 
-	/* write R15, set CLK_MUX to enable SPI */
+	// write R15, set CLK_MUX to enable SPI
 	sys_conf.r15.address_bits 	= 15;
 	sys_conf.r15.rx_test_mode  	= 0;
 	sys_conf.r15.tx_test_mode 	= 0;
 	sys_conf.r15.sd_test_mode 	= 0;
 	sys_conf.r15.cp_test_mode 	= 0;
 	sys_conf.r15.clk_mux 		= 7;
+//	sys_conf.r15.clk_mux 		= 0; // xxx SPI not set up yet
+
 	sys_conf.r15.pll_test_mode 	= 0;
 	sys_conf.r15.analog_test_mode 	= 0;
 	sys_conf.r15.force_ld_high 	= 0;
@@ -210,7 +297,7 @@ void adf_set_power_on(unsigned long adf_xtal)
 	sys_conf.r15.cal_override 	= 0;
 	adf_write_reg(&sys_conf.r15_reg);
 
-	/* write R14, enable test DAC */
+	// write R14, enable test DAC
 	sys_conf.r14.address_bits	= 14;
 	sys_conf.r14.test_tdac_en 	= 0;
 	sys_conf.r14.test_dac_offset 	= 0;
@@ -222,6 +309,11 @@ void adf_set_power_on(unsigned long adf_xtal)
 
 	adf_state = ADF_ON;
 	adf_pa_state = ADF_PA_OFF;
+
+	// xxx
+	delay_ms( 300 );
+	adf_init_rx_mode(conf.bitrate, conf.modindex, conf.rx_freq, conf.if_bw);
+	delay_ms( 300 );
 }
 
 void adf_set_power_off()
@@ -493,6 +585,11 @@ signed int adf_readback_rssi(void)
 
 	return round(dbm);
 }
+int adf_readback_rssi_raw(void)
+{
+	adf_reg_t readback = adf_read_reg(0x14);
+	return readback.whole_reg;
+}
 
 int adf_readback_afc(void)
 {
@@ -501,7 +598,7 @@ int adf_readback_afc(void)
 }
 
 
-signed int adf_readback_temp(void)
+float adf_readback_temp(void)
 {
 	/* Enable ADC */
 	adf_reg_t register_value;
@@ -509,7 +606,8 @@ signed int adf_readback_temp(void)
 	register_value.whole_reg &= 1 << 8;
 
 	adf_reg_t readback = adf_read_reg(0x16);
-	return round(-40 + ((68.4 - (readback.byte[0] & 0x7F)) * 9.32));
+	//return round(-40 + ((68.4 - (readback.byte[0] & 0x7F)) * 9.32));	// Fahrenheit
+	return (496.5f - (7.2f * (readback.byte[0] & 0x7F)));	// Celsius
 }
 
 float adf_readback_voltage(void)
