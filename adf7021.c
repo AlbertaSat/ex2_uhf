@@ -27,8 +27,8 @@
 
 
 // Platform-specific GPIO
-#ifndef __AVR__
-	// EFM32...
+#ifndef __AVR__	// For non-AVR MCUs...
+	// Assume EFM32...
 #	include "em_chip.h"
 
 #	define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PIN_##PINNAME )
@@ -73,7 +73,7 @@ static uint32_t adf_current_syncword;
 #define CSMA_RSSI		-50
 #define BAUD_RATE		2400
 #define MOD_INDEX		8
-#define PA_SETTING		0	// Was 8. 0 is off for testing...
+#define PA_SETTING		1	// Was 8. 0 is off for testing...
 #define AFC_RANGE		10
 #define AFC_KI			11
 #define AFC_KP			4
@@ -85,8 +85,8 @@ static uint32_t adf_current_syncword;
 #define TRAINING_SYMBOL		0x55
 #define TRAINING_MS		200
 #define TRAINING_INTER_MS	200
-#define PTT_DELAY_HIGH		100
-#define PTT_DELAY_LOW		100
+//#define PTT_DELAY_HIGH		100
+//#define PTT_DELAY_LOW		100
 
 
 //extern struct bluebox_config conf;
@@ -165,6 +165,9 @@ void adf_write_reg(adf_reg_t *reg)
 {
 	signed char i, j;
 	unsigned char byte;
+
+	// xxx
+	//delay_ms(100);
 
 	PINCLEAR( SLE );
 	PINCLEAR( SCLK );
@@ -271,15 +274,21 @@ void adf_set_power_on(unsigned long adf_xtal)
 	sys_conf.r1.r_counter 		= 1;
 	sys_conf.r1.clockout_divide 	= 0;
 	sys_conf.r1.xtal_doubler 	= 0;
-	sys_conf.r1.xosc_enable 	= 1;
-	sys_conf.r1.xtal_bias 		= 3;
-	sys_conf.r1.cp_current 		= 3;
-	sys_conf.r1.vco_enable 		= 1;
-	sys_conf.r1.rf_divide_by_2	= 1;
-	sys_conf.r1.vco_bias 		= 15;
-	sys_conf.r1.vco_adjust 		= 1;
+	sys_conf.r1.xosc_enable 	= 1;	// 1 is external XTAL
+	sys_conf.r1.xtal_bias 		= 0;//3;
+	sys_conf.r1.cp_current 		= 0;//3;
+	sys_conf.r1.vco_enable 		= 0;//1;
+	sys_conf.r1.rf_divide_by_2	= 0;//1;
+	sys_conf.r1.vco_bias 		= 0;//1;//15;
+	sys_conf.r1.vco_adjust 		= 0;//1;
 	sys_conf.r1.vco_inductor 	= 0;
+	sys_conf.r1_reg.whole_reg = 0x00575021;
+//xxx
 	adf_write_reg(&sys_conf.r1_reg);
+
+	//ADF7021.h:#define ADF7021_REG1_UHF1        0x00575021
+	//ADF7021.h:#define ADF7021_REG1_UHF2        0x00535021
+
 
 	// write R15, set CLK_MUX to enable SPI
 	sys_conf.r15.address_bits 	= 15;
@@ -288,13 +297,14 @@ void adf_set_power_on(unsigned long adf_xtal)
 	sys_conf.r15.sd_test_mode 	= 0;
 	sys_conf.r15.cp_test_mode 	= 0;
 	sys_conf.r15.clk_mux 		= 7;
-//	sys_conf.r15.clk_mux 		= 0; // xxx SPI not set up yet
+	//sys_conf.r15.clk_mux 		= 0; // xxx SPI not set up yet
 
 	sys_conf.r15.pll_test_mode 	= 0;
 	sys_conf.r15.analog_test_mode 	= 0;
 	sys_conf.r15.force_ld_high 	= 0;
 	sys_conf.r15.reg1_pd 		= 0;
 	sys_conf.r15.cal_override 	= 0;
+//xxx
 	adf_write_reg(&sys_conf.r15_reg);
 
 	// write R14, enable test DAC
@@ -310,10 +320,12 @@ void adf_set_power_on(unsigned long adf_xtal)
 	adf_state = ADF_ON;
 	adf_pa_state = ADF_PA_OFF;
 
+	/*
 	// xxx
 	delay_ms( 300 );
 	adf_init_rx_mode(conf.bitrate, conf.modindex, conf.rx_freq, conf.if_bw);
 	delay_ms( 300 );
+	*/
 }
 
 void adf_set_power_off()
@@ -548,7 +560,8 @@ void adf_set_rx_mode(void)
 void adf_set_tx_mode(void)
 {
 	/* Turn on PA the first time we transmit */
-	if (adf_pa_state == ADF_PA_OFF) {
+	//xxx if (adf_pa_state == ADF_PA_OFF) {
+	{
 		adf_write_reg(&tx_conf.r2_reg);
 		adf_pa_state = ADF_PA_ON;
 	}
@@ -556,7 +569,8 @@ void adf_set_tx_mode(void)
 	BLUEBOX_UNUSED( ptt_high(conf.ptt_delay_high) );
 	BLUEBOX_UNUSED( led_on(LED_TRANSMIT) );
 
-	if (adf_state == ADF_RX) {
+	// xxx
+	if (0 && adf_state == ADF_RX) {
 		if (rx_conf.r3_reg.whole_reg != tx_conf.r3_reg.whole_reg)
 			adf_write_reg(&tx_conf.r3_reg);
 		adf_write_reg(&tx_conf.r0_reg);
@@ -608,6 +622,16 @@ float adf_readback_temp(void)
 	adf_reg_t readback = adf_read_reg(0x16);
 	//return round(-40 + ((68.4 - (readback.byte[0] & 0x7F)) * 9.32));	// Fahrenheit
 	return (496.5f - (7.2f * (readback.byte[0] & 0x7F)));	// Celsius
+}
+int adf_readback_tempF(void)
+{
+	/* Enable ADC */
+	adf_reg_t register_value;
+	register_value.whole_reg = 8;
+	register_value.whole_reg &= 1 << 8;
+
+	adf_reg_t readback = adf_read_reg(0x16);
+	return round(-40 + ((68.4 - (readback.byte[0] & 0x7F)) * 9.32));	// Fahrenheit
 }
 
 float adf_readback_voltage(void)

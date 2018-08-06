@@ -34,12 +34,14 @@
 //bluebox:
 #define XTAL_FREQ 		16000000
 //#define XTAL_FREQ 		14000000
+//#define XTAL_FREQ 		1000000
 
 
 #ifdef EX2_DEVBOARD
 
-#define ADF_PIN_SWD		gpioPortA, 9
-#define ADF_PIN_SCLK	gpioPortD, 9
+#define ADF_PIN_SWD		gpioPortB, 8
+//#define ADF_PIN_SCLK	gpioPortD, 9
+#define ADF_PIN_SCLK	gpioPortC, 11	// Moved to accommodate cable
 #define ADF_PIN_SREAD	gpioPortD, 10
 #define ADF_PIN_SDATA	gpioPortC, 10
 #define ADF_PIN_SLE		gpioPortD, 11
