@@ -30,8 +30,36 @@ void PrintTemperature( )
 {
 	//int nTemp10 = (int)(adf_readback_temp( ) * 10.0f);
 	//printf( "Temp: %d.%d\n", nTemp10/10, nTemp10-(nTemp10/10 * 10) );
-	printf( "Temp: %d\n", adf_readback_tempF( ) );
+	printf( "Temp: %d\n", adf_readback_temp( ) );
 }
+
+
+
+
+/*void HandleSWDIrq( void )
+{
+
+}*/
+
+void GPIO_EVEN_IRQHandler(void)
+{
+  uint32_t iflags;
+
+  /* Get all even interrupts. */
+  iflags = GPIO_IntGetEnabled() & 0x00005555;
+
+  if (iflags & (1 << ADF_PINNUM_SWD))
+  {
+	  // Handle SWD pin interrupt
+	  printf( "**** SWD pin IRQ" );
+  }
+
+  /* Clean only even interrupts. */
+  GPIO_IntClear(iflags);
+
+  //GPIOINT_IRQDispatcher(iflags);
+}
+
 
 /******************************************************************************
  * @brief  initializing spi settings
@@ -51,6 +79,20 @@ void init(void)
 
   // xxx CAREFUL! Are you using PA9 for SWD ---and--- configuring it as SPI_CS?
   // Either change pin or PEN-out PA9 on USART2. Done?
+
+
+  // Set up SWD interrupt on raising edge
+#if (ADF_PINNUM_SWD & 1)
+#	error SWD configured as an even pin
+#endif
+  NVIC_ClearPendingIRQ(GPIO_EVEN_IRQn);
+  NVIC_EnableIRQ(GPIO_EVEN_IRQn);
+  //
+  GPIO_ExtIntConfig( ADF_PIN_SWD, ADF_PINNUM_SWD, true, false, true );
+  //
+  // Dispatch probably not needed
+  //GPIOINT_CallbackRegister(ADF_PINNUM_SWD, HandleSWDIrq );
+
 }
 
 int g_nTxBytesTotal = 0;
