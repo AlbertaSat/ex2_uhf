@@ -611,7 +611,7 @@ int adf_readback_afc(void)
 }
 
 
-float adf_readback_temp(void)
+int adf_readback_temp(void)
 {
 	/* Enable ADC */
 	adf_reg_t register_value;
@@ -620,18 +620,19 @@ float adf_readback_temp(void)
 
 	adf_reg_t readback = adf_read_reg(0x16);
 	//return round(-40 + ((68.4 - (readback.byte[0] & 0x7F)) * 9.32));	// Fahrenheit
-	return (496.5f - (7.2f * (readback.byte[0] & 0x7F)));	// Celsius
+	//float: return (496.5f - (7.2f * (readback.byte[0] & 0x7F)));	// Celsius
+	return round(496.5f - (7.2f * (readback.byte[0] & 0x7F)));	// Celsius
 }
-int adf_readback_tempF(void)
+/*int adf_readback_tempF(void)
 {
-	/* Enable ADC */
+	// Enable ADC
 	adf_reg_t register_value;
 	register_value.whole_reg = 8;
 	register_value.whole_reg &= 1 << 8;
 
 	adf_reg_t readback = adf_read_reg(0x16);
 	return round(-40 + ((68.4 - (readback.byte[0] & 0x7F)) * 9.32));	// Fahrenheit
-}
+}*/
 
 float adf_readback_voltage(void)
 {
