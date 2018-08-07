@@ -31,6 +31,11 @@
 			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/bsp/bsp_stk_leds.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/bsp_trace.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/bsp/bsp_trace.c</locationURI>
+		</link>
+		<link>
 			<name>Drivers/display.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/display.c</locationURI>
@@ -49,11 +54,6 @@
 			<name>Drivers/retargetio.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/retargetio.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/retargettextdisplay.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/retargettextdisplay.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/textdisplay.c</name>
