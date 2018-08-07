@@ -7,9 +7,14 @@
 
 #include "em_gpio.h"
 
+//#include "displayconfigall.h"
 #include "display.h"
 #include "textdisplay.h"
 #include "retargettextdisplay.h"
+
+//#include "retargetio.h"
+//#include <cmsis.h>
+#include <retargetswo.h>
 
 #include "adf7021.h"
 
@@ -23,6 +28,102 @@ char transmitBuffer[] = "socks";
 #define            BUFFERSIZE    (sizeof(transmitBuffer) / sizeof(char))
 //char receiveBuffer[BUFFERSIZE];
 char receiveBuffer2[BUFFERSIZE];
+
+
+
+
+//****************************************************************************************************************
+// Combining retargeting of printf to both SWO (console output) and Display
+
+// For console output
+void RETARGET_SwoInit(void)
+{
+  BSP_TraceSwoSetup();
+}
+
+/* Handle which references the selected text display to print text on. */
+TEXTDISPLAY_Handle_t  textDisplayHandle = 0;
+
+
+/**************************************************************************//**
+ * @brief Initialize/retarget a TEXTDISPLAY device to receivie stdout(put).
+ *
+ * @return  EMSTATUS code of the operation.
+ *****************************************************************************/
+EMSTATUS RETARGET_TextDisplayInit(void)
+{
+  EMSTATUS              status;
+  DISPLAY_Device_t      displayDevice;
+  TEXTDISPLAY_Config_t  textDisplayConfig;
+
+  /* Query that the specified DISPLAY device is available.  */
+  status = DISPLAY_DeviceGet(RETARGETTEXTDISPLAY_DISPLAY_NO, &displayDevice);
+
+  if (DISPLAY_EMSTATUS_OK == status) {
+    textDisplayConfig.displayDeviceNo  = RETARGETTEXTDISPLAY_DISPLAY_NO;
+    textDisplayConfig.scrollEnable     = RETARGETTEXTDISPLAY_SCROLL_MODE;
+    textDisplayConfig.lfToCrLf         = RETARGETTEXTDISPLAY_LINE_FEED_MODE;
+
+    status = TEXTDISPLAY_New(&textDisplayConfig, &textDisplayHandle);
+
+#if !defined(__CROSSWORKS_ARM) && defined(__GNUC__)
+    if (TEXTDISPLAY_EMSTATUS_OK == status) {
+      /* Set unbuffered mode for stdout (newlib) */
+      setvbuf(stdout, NULL, _IONBF, 0);
+    }
+#endif
+  }
+
+  return status;
+}
+
+/**************************************************************************//**
+ * @brief Receive a byte
+ *    No input method from the text display is possible, thus we always
+ *    return -1
+ *
+ * @return -1 on failure
+ *****************************************************************************/
+int RETARGET_ReadChar(void)
+{
+  return -1;
+}
+
+/**************************************************************************//**
+ * @brief Write a single byte to the text display
+ *
+ * @param c Character to write
+ *
+ * @return Printed character if text display is initialized.
+ *         -1 if text display is not initialized.
+ *****************************************************************************/
+int RETARGET_WriteChar(char c)
+{
+	ITM_SendChar( c );
+
+  if (textDisplayHandle) {
+    TEXTDISPLAY_WriteChar(textDisplayHandle, c);
+    return c;
+  } else {
+    return -1;
+  }
+}
+
+/**************************************************************************//**
+ * @brief Write a string of characters to the RETARGET text display device.
+ *
+ * @param[in] str     String to write.
+ *
+ * @return  EMSTATUS code of the operation.
+ *****************************************************************************/
+EMSTATUS RETARGET_WriteString(char*   str)
+{
+  if (textDisplayHandle) {
+    return TEXTDISPLAY_WriteString(textDisplayHandle, str);
+  } else {
+    return TEXTDISPLAY_EMSTATUS_NOT_INITIALIZED;
+  }
+}
 
 
 
@@ -41,6 +142,8 @@ void PrintTemperature( )
 
 }*/
 
+// Handles even-pin IRQs, including:
+// SWD
 void GPIO_EVEN_IRQHandler(void)
 {
   uint32_t iflags;
@@ -161,6 +264,14 @@ int main(void)
 	  /* Receiving data by transmitting dummy data to slave */
 	  //USART3_sendBuffer(transmitBufferIncoming, BUFFERSIZE);
 
+	// Console output...
+	setupSWOForPrint( );
+	printf( "printf test." );
+	ITM_SendChar( 'T' );
+	ITM_SendChar( 'e' );
+	ITM_SendChar( 's' );
+	ITM_SendChar( 't' );
+	ITM_SendChar( '!' );
 
 
 	// The code in this file should only be used for prototyping.
@@ -175,6 +286,8 @@ int main(void)
 	{
 		while (1) ;
 	}
+
+	//SWO_SetupForPrint( );
 
 	printf("Test begins\n");
 
