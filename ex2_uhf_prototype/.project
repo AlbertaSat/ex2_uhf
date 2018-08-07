@@ -36,6 +36,11 @@
 			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/bsp/bsp_trace.c</locationURI>
 		</link>
 		<link>
+			<name>Drivers/capsense.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/capsense.c</locationURI>
+		</link>
+		<link>
 			<name>Drivers/display.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/display.c</locationURI>
@@ -64,6 +69,11 @@
 			<name>Drivers/udelay.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/hardware/kit/common/drivers/udelay.c</locationURI>
+		</link>
+		<link>
+			<name>emlib/em_acmp.c</name>
+			<type>1</type>
+			<locationURI>STUDIO_SDK_LOC/platform/emlib/src/em_acmp.c</locationURI>
 		</link>
 		<link>
 			<name>emlib/em_assert.c</name>

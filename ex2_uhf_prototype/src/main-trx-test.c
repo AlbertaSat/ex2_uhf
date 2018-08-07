@@ -22,6 +22,8 @@
 #include <string.h>
 #include "transceiver-spi.h"
 
+#include "capsense.h"
+
 //
 /* SPI Buffers */
 char transmitBuffer[] = "socks";
@@ -124,7 +126,7 @@ EMSTATUS RETARGET_WriteString(char*   str)
     return TEXTDISPLAY_EMSTATUS_NOT_INITIALIZED;
   }
 }
-
+//****************************************************************************************************************
 
 
 void PrintTemperature( )
@@ -331,6 +333,16 @@ int main(void)
 	GPIO_PinModeSet(BSP_GPIO_PB1_PORT, BSP_GPIO_PB1_PIN, gpioModeInputPull, 1);
 	GPIO_PinModeSet(BSP_GPIO_PB0_PORT, BSP_GPIO_PB0_PIN, gpioModeInputPull, 1);
 
+    // Enable the capacitive slider
+	CAPSENSE_Init( );
+	int nOldSliderPos = -1; // Not touched. Must call CAPSENSE_Sense( ) before doing CAPSENSE_getSliderPosition( );
+
+    /*capSlider.start();
+    capSlider.attach_touch(touchCallback);
+    capSlider.attach_untouch(touchCallback);
+    capSlider.attach_slide(-1, slideCallback);
+	*/
+
 	// Monitor data on the SPI pins...
 	/* dumbass
 	GPIO_PinModeSet(gpioPortA, 6, gpioModeInput, 0);
@@ -395,6 +407,9 @@ int main(void)
 			// Reset the ADF...
 			switch( nResetState++ ) {
 			case 0:
+				// xxx must disable SPI IRQs otherwise this will lock up the MCU as the CLK? line goes high???
+				// not done
+
 				// Cycle CE
 				PINCLEAR( CE );
 				PINSET( CE );
@@ -442,6 +457,20 @@ int main(void)
 				printf("rx mode\n");
 			}
 		}
+
+#define SLIDER_MAX	48
+		CAPSENSE_Sense( );
+		int nSliderPos = CAPSENSE_getSliderPosition( );
+		if (nSliderPos >= 0  &&  nOldSliderPos != nSliderPos)
+		{
+			nOldSliderPos = nSliderPos;
+			// Interpolate slider max to PA range (max 63)
+			int nPA = nSliderPos * 63 / SLIDER_MAX;
+			// If this is out of range, it'll ignore out of range bits, don't care.
+			printf( "PA: %d\n", (int)nPA );
+			adf_set_tx_power( nPA );
+		}
+
 
 		delay_ms( 500 );
 	}
