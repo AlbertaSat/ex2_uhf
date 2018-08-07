@@ -271,24 +271,23 @@ void adf_set_power_on(unsigned long adf_xtal)
 
 	/* write R1, Turn on Internal VCO */
 	sys_conf.r1.address_bits 	= 1;
-	sys_conf.r1.r_counter 		= 1;
+	sys_conf.r1.r_counter 		= 2;
 	sys_conf.r1.clockout_divide 	= 0;
 	sys_conf.r1.xtal_doubler 	= 0;
 	sys_conf.r1.xosc_enable 	= 1;	// 1 is external XTAL
-	sys_conf.r1.xtal_bias 		= 0;//3;
-	sys_conf.r1.cp_current 		= 0;//3;
-	sys_conf.r1.vco_enable 		= 0;//1;
+	sys_conf.r1.xtal_bias 		= 2;//3;
+	//EFM_ASSERT( sys_conf.r1_reg.whole_reg == 0x00005021 );	// check bit alignment 0b 101 0000 0010 0001
+	sys_conf.r1.cp_current 		= 2;//3;
+	sys_conf.r1.vco_enable 		= 1;//1;
 	sys_conf.r1.rf_divide_by_2	= 0;//1;
-	sys_conf.r1.vco_bias 		= 0;//1;//15;
+	sys_conf.r1.vco_bias 		= 10;//1;//15;
 	sys_conf.r1.vco_adjust 		= 0;//1;
 	sys_conf.r1.vco_inductor 	= 0;
-	sys_conf.r1_reg.whole_reg = 0x00575021;
 //xxx
 	adf_write_reg(&sys_conf.r1_reg);
 
 	//ADF7021.h:#define ADF7021_REG1_UHF1        0x00575021
 	//ADF7021.h:#define ADF7021_REG1_UHF2        0x00535021
-
 
 	// write R15, set CLK_MUX to enable SPI
 	sys_conf.r15.address_bits 	= 15;

@@ -36,6 +36,8 @@
 //#define XTAL_FREQ 		14000000
 //#define XTAL_FREQ 		1000000
 
+// Bitfields must be left in position and not be aligned to word boundaries
+#define PACKED	__attribute__ ((__packed__))
 
 #ifdef EX2_DEVBOARD
 
@@ -118,7 +120,7 @@ typedef struct {
 			unsigned char rx_on : 1;
 			unsigned char uart_mode : 1;
 			unsigned char muxout : 3;
-		} r0;
+		} PACKED r0;
 	};
 	union {
 		adf_reg_t r2_reg;
@@ -132,7 +134,7 @@ typedef struct {
 			unsigned int  tx_frequency_deviation : 9;
 			unsigned char tx_data_invert : 2;
 			unsigned char rcosine_alpha : 1;
-		} r2;
+		} PACKED r2;
 	};
 	union {
 		adf_reg_t r3_reg;
@@ -143,7 +145,7 @@ typedef struct {
 			unsigned char cdr_clk_divide : 8;
 			unsigned char seq_clk_divide : 8;
 			unsigned char agc_clk_divide : 6;
-		} r3;
+		} PACKED r3;
 	};
 	union {
 		adf_reg_t r4_reg;
@@ -155,7 +157,7 @@ typedef struct {
 			unsigned int  disc_bw : 10;
 			unsigned int  post_demod_bw : 10;
 			unsigned char if_bw : 2;
-		} r4;
+		} PACKED r4;
 	};
 	union {
 		adf_reg_t r5_reg;
@@ -169,7 +171,7 @@ typedef struct {
 			unsigned char ir_gain_adjust_mac : 5;
 			unsigned char ir_gain_adjust_iq : 1;
 			unsigned char ir_gain_adjust_updn : 1;
-		} r5;
+		} PACKED r5;
 	};
 	union {
 		adf_reg_t r6_reg;
@@ -181,7 +183,7 @@ typedef struct {
 			unsigned char if_cal_dwell_time : 7;
 			unsigned char ir_cal_source_drive : 2;
 			unsigned char ir_cal_source_div_2 : 1;
-		} r6;
+		} PACKED r6;
 	};
 } adf_conf_t;
 
@@ -202,7 +204,7 @@ typedef struct {
 			unsigned char vco_bias : 4;
 			unsigned char vco_adjust : 2;
 			unsigned char vco_inductor : 1;
-		} r1;
+		} PACKED r1;
 	};
 	union {
 		adf_reg_t r10_reg;
@@ -213,7 +215,7 @@ typedef struct {
 			unsigned char ki : 4;
 			unsigned char kp : 3;
 			unsigned char afc_range : 8;
-		} r10;
+		} PACKED r10;
 	};
 	union {
 		adf_reg_t r12_reg;
@@ -222,7 +224,7 @@ typedef struct {
 			unsigned char lock_thres_mode : 2;
 			unsigned char swd_mode : 2;
 			unsigned char packet_length : 8;
-		} r12;
+		} PACKED r12;
 	};
 	union {
 		adf_reg_t r14_reg;
@@ -234,7 +236,7 @@ typedef struct {
 			unsigned char pulse_ext : 2;
 			unsigned char leak_factor : 3;
 			unsigned char ed_peak_resp : 2;
-		} r14;
+		} PACKED r14;
 	};
 	union {
 		adf_reg_t r15_reg;
@@ -250,7 +252,7 @@ typedef struct {
 			unsigned char force_ld_high : 1;
 			unsigned char reg1_pd : 1;
 			unsigned char cal_override : 2;
-		} r15;
+		} PACKED r15;
 	};
 } adf_sysconf_t;
 
