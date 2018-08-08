@@ -15,19 +15,13 @@ Fix:
 ## Bugs, flaws, do me
 
 ### Not yet done
-- Setup SWD interrupt on RISING edge
+Future tasks are listed in changes.md.
 
 ### CS pin is reserved for ADF7021 SPI, but it is unconnected.
 The typical implementation of an SPI slave has the MCU selected with the CS pin, but the ADF7021 doesn't do this.
 The current work-around is to pull the pin low so the MCU is always the selected slave.
 A problem is that this reserves a GPIO pin for CS but doesn't use it. There may be a neater solution to get around using CS in code (however such a solution might instead be an ugly kludge?).
 **Status:** Does not affect functionality, DNF.
-
-### Transmission SPI is currently blocking?
-Transmitting data loops until the transmission is complete.
-It should be made threaded, or use polling and exit instead of waiting.
-**Status:** Needs to be fixed before any other time-critical main-loop functionality is added (note that Tx and Rx are still concurrent---at least in code---because Rx is interrupt-driven).
-Incorrect?
 
 ### Hardcoded timing variables
 Some assume 14MHz, etc.
