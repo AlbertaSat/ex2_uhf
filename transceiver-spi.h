@@ -7,7 +7,8 @@
 
 // SPI
 
-#define TRX_USART			USART2
+//#define TRX_USART			USART2
+#define TRX_USART			USART1
 
 
 void SPI_setupSLAVE( );

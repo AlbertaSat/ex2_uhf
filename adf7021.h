@@ -27,21 +27,25 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-//#include "em_device.h"
-//#include "em_chip.h"
+
 
 /* Board xtal frequency (MCU clock frequency???) */
-//bluebox:
-#define XTAL_FREQ 		16000000
-//#define XTAL_FREQ 		14000000
-//#define XTAL_FREQ 		1000000
+#define XTAL_FREQ 		16000000	// bluebox
+//#define XTAL_FREQ 		14000000	// PG12 default CPU freq
+//#define XTAL_FREQ 		1000000		// low freq test
 
-// Bitfields must be left in position and not be aligned to word boundaries
+// Bitfields must be left in position and not be aligned to word or byte boundaries
 #define PACKED	__attribute__ ((__packed__))
-//#define CHAR	char
-#define CHAR	int			// Prevent compiler warnings with char bitfield alignment for fields that span a byte boundary.
+// If porting this code to other platforms, check that bitfields are not being realigned by the compiler.
+// Due to implementation differences, char-sized bitfields that cross a byte boundary are defined as int. This was done to avoid gcc warnings.
+
+
+
+// ************************************************************************
+// Pin configurations for different hardware implementations:
 
 #ifdef EX2_DEVBOARD
+// Ex2 Pearl prototype.
 
 #define ADF_PINNUM_SWD	8
 #define ADF_PIN_SWD		gpioPortB, ADF_PINNUM_SWD
@@ -53,6 +57,20 @@
 #define ADF_PIN_SLE		gpioPortD, 11
 #define ADF_PIN_MUXOUT	gpioPortD, 12
 #define ADF_PIN_CE		gpioPortD, 8
+#error
+
+#elif defined( EX2_GIANT_M3 )
+// Ex2 Giant M3 STK3700 prototype.
+
+#define ADF_PINNUM_SWD	11
+#define ADF_PIN_SWD		gpioPortB, ADF_PINNUM_SWD
+
+#define ADF_PIN_SCLK	gpioPortC, 6
+#define ADF_PIN_SREAD	gpioPortD, 4
+#define ADF_PIN_SDATA	gpioPortD, 6
+#define ADF_PIN_SLE		gpioPortD, 5
+#define ADF_PIN_MUXOUT	gpioPortD, 12
+#define ADF_PIN_CE		gpioPortB, 12
 
 
 #elif defined(BBSTANDARD)
@@ -118,75 +136,75 @@ typedef struct {
 	union {
 		adf_reg_t r0_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
+			unsigned char address_bits : 4;
 			unsigned int  frac_n : 15;
 			unsigned int  int_n : 8;
-			unsigned CHAR rx_on : 1;
-			unsigned CHAR uart_mode : 1;
-			unsigned CHAR muxout : 3;
+			unsigned char rx_on : 1;
+			unsigned char uart_mode : 1;
+			unsigned char muxout : 3;
 		} PACKED r0;
 	};
 	union {
 		adf_reg_t r2_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR modulation_scheme : 3;
-			unsigned CHAR pa_enable : 1;
-			unsigned CHAR pa_ramp : 3;
-			unsigned CHAR pa_bias : 2;
-			unsigned CHAR power_amplifier : 6;
+			unsigned char address_bits : 4;
+			unsigned char modulation_scheme : 3;
+			unsigned char pa_enable : 1;
+			unsigned char pa_ramp : 3;
+			unsigned char pa_bias : 2;
+			unsigned int  power_amplifier : 6;			// spans word boundary
 			unsigned int  tx_frequency_deviation : 9;
-			unsigned CHAR tx_data_invert : 2;
-			unsigned CHAR rcosine_alpha : 1;
+			unsigned char tx_data_invert : 2;
+			unsigned char rcosine_alpha : 1;
 		} PACKED r2;
 	};
 	union {
 		adf_reg_t r3_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR bbos_clk_divide: 2;
-			unsigned CHAR dem_clk_divide : 4;
-			unsigned CHAR cdr_clk_divide : 8;
-			unsigned CHAR seq_clk_divide : 8;
-			unsigned CHAR agc_clk_divide : 6;
+			unsigned char address_bits : 4;
+			unsigned char bbos_clk_divide: 2;
+			unsigned int  dem_clk_divide : 4;			// spans byte boundary
+			unsigned int  cdr_clk_divide : 8;			// spans word boundary
+			unsigned int  seq_clk_divide : 8;			// spans byte boundary
+			unsigned char agc_clk_divide : 6;
 		} PACKED r3;
 	};
 	union {
 		adf_reg_t r4_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR demod_scheme : 3;
-			unsigned CHAR dot_product : 1;
-			unsigned CHAR rx_invert : 2;
+			unsigned char address_bits : 4;
+			unsigned char demod_scheme : 3;
+			unsigned char dot_product : 1;
+			unsigned char rx_invert : 2;
 			unsigned int  disc_bw : 10;
 			unsigned int  post_demod_bw : 10;
-			unsigned CHAR if_bw : 2;
+			unsigned char if_bw : 2;
 		} PACKED r4;
 	};
 	union {
 		adf_reg_t r5_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR if_cal_coarse : 1;
+			unsigned char address_bits : 4;
+			unsigned char if_cal_coarse : 1;
 			unsigned int  if_filter_divider : 9;
-			unsigned CHAR if_filter_adjust : 6;
-			unsigned CHAR ir_phase_adjust_mag : 4;
-			unsigned CHAR ir_phase_adjust_direction : 1;
-			unsigned CHAR ir_gain_adjust_mac : 5;
-			unsigned CHAR ir_gain_adjust_iq : 1;
-			unsigned CHAR ir_gain_adjust_updn : 1;
+			unsigned int  if_filter_adjust : 6;				// spans word boundary
+			unsigned char ir_phase_adjust_mag : 4;
+			unsigned char ir_phase_adjust_direction : 1;
+			unsigned char ir_gain_adjust_mac : 5;
+			unsigned char ir_gain_adjust_iq : 1;
+			unsigned char ir_gain_adjust_updn : 1;
 		} PACKED r5;
 	};
 	union {
 		adf_reg_t r6_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR if_fine_cal : 1;
-			unsigned CHAR if_cal_lower_tone : 8;
-			unsigned CHAR if_cal_upper_tone : 8;
-			unsigned CHAR if_cal_dwell_time : 7;
-			unsigned CHAR ir_cal_source_drive : 2;
-			unsigned CHAR ir_cal_source_div_2 : 1;
+			unsigned char address_bits : 4;
+			unsigned char if_fine_cal : 1;
+			unsigned int  if_cal_lower_tone : 8;			// spans byte boundary
+			unsigned int  if_cal_upper_tone : 8;			// spans word boundary
+			unsigned int  if_cal_dwell_time : 7;			// spans byte boundary
+			unsigned char ir_cal_source_drive : 2;
+			unsigned char ir_cal_source_div_2 : 1;
 		} PACKED r6;
 	};
 } adf_conf_t;
@@ -196,66 +214,66 @@ typedef struct {
 	union {
 		adf_reg_t r1_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR r_counter : 3;
-			unsigned CHAR clockout_divide : 4;
-			unsigned CHAR xtal_doubler : 1;
-			unsigned CHAR xosc_enable : 1;
-			unsigned CHAR xtal_bias : 2;
-			unsigned CHAR cp_current : 2;
-			unsigned CHAR vco_enable : 1;
-			unsigned CHAR rf_divide_by_2 : 1;
-			unsigned CHAR vco_bias : 4;
-			unsigned CHAR vco_adjust : 2;
-			unsigned CHAR vco_inductor : 1;
+			unsigned char address_bits : 4;
+			unsigned char r_counter : 3;
+			unsigned int  clockout_divide : 4;			// spans byte boundary
+			unsigned char xtal_doubler : 1;
+			unsigned char xosc_enable : 1;
+			unsigned char xtal_bias : 2;
+			unsigned int  cp_current : 2;				// spans word boundary
+			unsigned char vco_enable : 1;
+			unsigned char rf_divide_by_2 : 1;
+			unsigned char vco_bias : 4;
+			unsigned int  vco_adjust : 2;				// spans byte boundary
+			unsigned char vco_inductor : 1;
 		} PACKED r1;
 	};
 	union {
 		adf_reg_t r10_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR afc_en : 1;
+			unsigned char address_bits : 4;
+			unsigned char afc_en : 1;
 			unsigned int  afc_scaling_factor : 12;
-			unsigned CHAR ki : 4;
-			unsigned CHAR kp : 3;
-			unsigned CHAR afc_range : 8;
+			unsigned char ki : 4;
+			unsigned char kp : 3;
+			unsigned char afc_range : 8;
 		} PACKED r10;
 	};
 	union {
 		adf_reg_t r12_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR lock_thres_mode : 2;
-			unsigned CHAR swd_mode : 2;
-			unsigned CHAR packet_length : 8;
+			unsigned char address_bits : 4;
+			unsigned char lock_thres_mode : 2;
+			unsigned char swd_mode : 2;
+			unsigned char packet_length : 8;
 		} PACKED r12;
 	};
 	union {
 		adf_reg_t r14_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR test_tdac_en : 1;
-			unsigned int test_dac_offset : 16;
-			unsigned CHAR test_dac_gain : 4;
-			unsigned CHAR pulse_ext : 2;
-			unsigned CHAR leak_factor : 3;
-			unsigned CHAR ed_peak_resp : 2;
+			unsigned char address_bits : 4;
+			unsigned char test_tdac_en : 1;
+			unsigned int  test_dac_offset : 16;
+			unsigned int  test_dac_gain : 4;			// spans byte boundary
+			unsigned char pulse_ext : 2;
+			unsigned char leak_factor : 3;
+			unsigned char ed_peak_resp : 2;
 		} PACKED r14;
 	};
 	union {
 		adf_reg_t r15_reg;
 		struct {
-			unsigned CHAR address_bits : 4;
-			unsigned CHAR rx_test_mode : 4;
-			unsigned CHAR tx_test_mode : 3;
-			unsigned CHAR sd_test_mode : 3;
-			unsigned CHAR cp_test_mode : 3;
-			unsigned CHAR clk_mux : 3;
-			unsigned CHAR pll_test_mode : 4;
-			unsigned CHAR analog_test_mode : 4;
-			unsigned CHAR force_ld_high : 1;
-			unsigned CHAR reg1_pd : 1;
-			unsigned CHAR cal_override : 2;
+			unsigned char address_bits : 4;
+			unsigned char rx_test_mode : 4;
+			unsigned char tx_test_mode : 3;
+			unsigned char sd_test_mode : 3;
+			unsigned int  cp_test_mode : 3;				// spans word boundary
+			unsigned char clk_mux : 3;
+			unsigned char pll_test_mode : 4;
+			unsigned char analog_test_mode : 4;
+			unsigned char force_ld_high : 1;
+			unsigned char reg1_pd : 1;
+			unsigned char cal_override : 2;
 		} PACKED r15;
 	};
 } adf_sysconf_t;

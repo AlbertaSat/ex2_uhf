@@ -67,9 +67,15 @@ volatile int slaveRxBufferIndex;
 
 // Which USART is used for TRX chip, and which pin routing location?
 //xxx moved
+
+#ifdef EX2_DEVBOARD
+
+#error
+#define USE_USART2
 #define TRX_USART			USART2
+#define TRX_USART_RX_IRQn 	USART2_RX_IRQn
+#define TRX_USART_TX_IRQn 	USART2_TX_IRQn
 #define TRX_USE_PINROUTING_LOC1
-#define TRX_LEGACY_LOCNUM	1
 // The following pins must match the selected USART and location, according to MCU manual.
 #define TRX_PORT		gpioPortA	// Assuming all USART pins share one port.
 #define TRX_PIN_MOSI	6
@@ -77,6 +83,22 @@ volatile int slaveRxBufferIndex;
 #define TRX_PIN_CLK		8
 #define TRX_PIN_CS		9
 
+#elif defined( EX2_GIANT_M3 )
+
+//#define USE_USART2
+#define TRX_USART			USART1
+#define TRX_USART_RX_IRQn 	USART1_RX_IRQn
+#define TRX_USART_TX_IRQn 	USART1_TX_IRQn
+//#define TRX_USE_PINROUTING_LOC1
+#define TRX_LEGACY_LOCNUM	1
+// The following pins must match the selected USART and location, according to MCU manual.
+#define TRX_PORT		gpioPortD	// Assuming all USART pins share one port.
+#define TRX_PIN_MOSI	0
+#define TRX_PIN_MISO	1
+#define TRX_PIN_CLK		2
+#define TRX_PIN_CS		3
+
+#endif
 void SPI_setupSLAVE( )
 {
 	USART_TypeDef *spi = TRX_USART;
@@ -89,7 +111,11 @@ void SPI_setupSLAVE( )
 	spi->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;	// Clear old transfers/receptions
 	spi->IEN = 0;	// Disable interrupts
 	// Pin enable and routing...
-#ifdef USART_ROUTELOC0_TXLOC_DEFAULT	// GG11 PG12 etc per-pin routing...
+//#ifdef USART_ROUTELOC0_TXLOC_DEFAULT	// GG11 PG12 etc per-pin routing...
+#ifdef EX2_GIANT_M3
+	// GG1 etc: PEN and ROUTE are in the same variable
+	spi->ROUTE = USART_ROUTE_TXPEN | USART_ROUTE_RXPEN | USART_ROUTE_CLKPEN | USART_ROUTE_CSPEN | (TRX_LEGACY_LOCNUM << 8);
+#else
 	spi->ROUTEPEN = USART_ROUTEPEN_TXPEN | USART_ROUTEPEN_RXPEN | USART_ROUTEPEN_CLKPEN | USART_ROUTEPEN_CSPEN;
 	/* Sorry, this just ADDS a layer of confusion to the already horrible ROUTELOC0 defines...
 	//#define TRX_ROUTELOC_VAL	ROUTELOC_BITS( LOC1 )	// ROUTELOC_BITS is defined within code...
@@ -106,9 +132,6 @@ void SPI_setupSLAVE( )
 #	else
 #	error No TRX routing location configured!
 #	endif
-#else
-	// GG1 etc: PEN and ROUTE are in the same variable
-	spi->ROUTE = USART_ROUTE_TXPEN | USART_ROUTE_RXPEN | USART_ROUTE_CLKPEN /*| USART_ROUTE_CSPEN*/ | (TRX_LEGACY_LOCNUM << 8);
 #endif
 
 	// Enable TX and RX
@@ -135,7 +158,7 @@ void SPI_setupSLAVE( )
  *****************************************************************************/
 void SPI2_setupRXInt(char* receiveBuffer, int receiveBufferSize)
 {
-  USART_TypeDef *spi = USART2;
+  USART_TypeDef *spi = TRX_USART;
 
   /* Setting up pointer and indexes */
   slaveRxBuffer      = receiveBuffer;
@@ -146,10 +169,10 @@ void SPI2_setupRXInt(char* receiveBuffer, int receiveBufferSize)
   spi->CMD = USART_CMD_CLEARRX;
 
   /* Enable interrupts */
-  NVIC_ClearPendingIRQ(USART2_RX_IRQn);
+  NVIC_ClearPendingIRQ(TRX_USART_RX_IRQn);
   if (receiveBuffer)
   {
-	  NVIC_EnableIRQ(USART2_RX_IRQn);
+	  NVIC_EnableIRQ(TRX_USART_RX_IRQn);
 	  spi->IEN |= USART_IEN_RXDATAV;
   }
 }
@@ -163,7 +186,7 @@ void SPI2_setupRXInt(char* receiveBuffer, int receiveBufferSize)
  *****************************************************************************/
 void SPI2_setupTXInt(char* transmitBuffer, int transmitBufferSize)
 {
-  USART_TypeDef *spi = USART2;
+  USART_TypeDef *spi = TRX_USART;
 
   /* Setting up pointer and indexes */
   slaveTxBuffer      = transmitBuffer;
@@ -174,10 +197,10 @@ void SPI2_setupTXInt(char* transmitBuffer, int transmitBufferSize)
   spi->CMD = USART_CMD_CLEARTX;
 
   /* Enable interrupts */
-  NVIC_ClearPendingIRQ(USART2_TX_IRQn);
+  NVIC_ClearPendingIRQ(TRX_USART_TX_IRQn);
   if (transmitBuffer)
   {
-	  NVIC_EnableIRQ(USART2_TX_IRQn);
+	  NVIC_EnableIRQ(TRX_USART_TX_IRQn);
 	  spi->IEN |= USART_IEN_TXBL;
   }
 }
@@ -206,9 +229,13 @@ void SPI2_setupSlaveInt(char* receiveBuffer, int receiveBufferSize, char* transm
 /**************************************************************************//**
  * @brief USARTx RX IRQ Handler
  *****************************************************************************/
+#ifdef USE_USART2
 void USART2_RX_IRQHandler(void)
+#else
+void USART1_RX_IRQHandler(void)
+#endif
 {
-  USART_TypeDef *spi = USART2;
+  USART_TypeDef *spi = TRX_USART;
   uint8_t       rxdata;
 
   if (spi->STATUS & USART_STATUS_RXDATAV)
@@ -230,9 +257,13 @@ void USART2_RX_IRQHandler(void)
 /**************************************************************************//**
  * @brief USARTx TX IRQ Handler
  *****************************************************************************/
-void USART2_TX_IRQHandler(void)
+#ifdef USE_USART2
+void USART2_TX_IRQHandler(void) xxx
+#else
+void USART1_TX_IRQHandler(void)
+#endif
 {
-  USART_TypeDef *spi = USART2;
+  USART_TypeDef *spi = TRX_USART;
 
   if (spi->STATUS & USART_STATUS_TXBL)
   {
@@ -266,13 +297,13 @@ void USART2_TX_IRQHandler(void)
 
 
 /******************************************************************************
- * @brief sends data using USART2
+ * @brief sends data using USARTn
  * @param txBuffer points to data to transmit
  * @param bytesToSend bytes will be sent
  *****************************************************************************/
-void USART2_sendBuffer(char* txBuffer, int bytesToSend)
+void TRX_USART_sendBuffer(char* txBuffer, int bytesToSend)
 {
-  USART_TypeDef *uart = USART2;
+  USART_TypeDef *uart = TRX_USART;
   int           ii;
 
   /* Sending the data */

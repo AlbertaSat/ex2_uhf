@@ -7,6 +7,13 @@
 
 #include "em_gpio.h"
 
+
+#ifdef EFM32GG990F1024
+#	define GECKO_M3
+#else
+#	define GECKO_M4
+#endif
+
 //#include "displayconfigall.h"
 #include "display.h"
 #include "textdisplay.h"
@@ -22,7 +29,9 @@
 #include <string.h>
 #include "transceiver-spi.h"
 
-#include "capsense.h"
+#ifdef GECKO_M4
+#	include "capsense.h"
+#endif
 
 //
 /* SPI Buffers */
@@ -52,6 +61,7 @@ TEXTDISPLAY_Handle_t  textDisplayHandle = 0;
  *
  * @return  EMSTATUS code of the operation.
  *****************************************************************************/
+#ifdef RETARGETTEXTDISPLAY_DISPLAY_NO
 EMSTATUS RETARGET_TextDisplayInit(void)
 {
   EMSTATUS              status;
@@ -78,7 +88,7 @@ EMSTATUS RETARGET_TextDisplayInit(void)
 
   return status;
 }
-
+#endif
 /**************************************************************************//**
  * @brief Receive a byte
  *    No input method from the text display is possible, thus we always
@@ -103,12 +113,16 @@ int RETARGET_WriteChar(char c)
 {
 	ITM_SendChar( c );
 
+#ifdef GECKO_M4
   if (textDisplayHandle) {
     TEXTDISPLAY_WriteChar(textDisplayHandle, c);
     return c;
   } else {
     return -1;
   }
+#else
+  return c;
+#endif
 }
 
 /**************************************************************************//**
@@ -173,8 +187,8 @@ void GPIO_EVEN_IRQHandler(void)
 void init(void)
 {
   /* Enabling clock to USART 1 and 2*/
-  //CMU_ClockEnable(cmuClock_USART1, true);
-  CMU_ClockEnable(cmuClock_USART2, true);
+  CMU_ClockEnable(cmuClock_USART1, true);	// xxx only for Giant M3
+  CMU_ClockEnable(cmuClock_USART2, true);	// xxx only for Pearl (and other?)
   //CMU_ClockEnable(cmuClock_GPIO, true);
 
   /* Setup UART */
@@ -187,7 +201,7 @@ void init(void)
 
 
   // Set up SWD interrupt on raising edge
-#if (ADF_PINNUM_SWD & 1)
+#if (ADF_PINNUM_SWD & 1) && defined(EX2_DEVBOARD)
 #	error SWD configured as an even pin
 #endif
   NVIC_ClearPendingIRQ(GPIO_EVEN_IRQn);
@@ -204,6 +218,11 @@ int g_nTxBytesTotal = 0;
 
 int main(void)
 {
+#ifdef GECKO_M3	// Skip most stuff for older boards
+	/* Chip errata */
+	CHIP_Init();
+
+#else // Pearl...
 	EMU_DCDCInit_TypeDef dcdcInit = EMU_DCDCINIT_STK_DEFAULT;
 	CMU_HFXOInit_TypeDef hfxoInit = CMU_HFXOINIT_STK_DEFAULT;
 
@@ -224,6 +243,7 @@ int main(void)
 	CMU_HFRCOBandSet( cmuHFRCOFreq_16M0Hz );
 	//CMU_HFRCOBandSet( cmuHFRCOFreq_19M0Hz );
 	//CMU_HFRCOBandSet( cmuHFRCOFreq_32M0Hz );
+#endif
 
 	/*
 	// Setup SysTick Timer for 1 msec interrupts
@@ -277,9 +297,10 @@ int main(void)
 
 
 	// The code in this file should only be used for prototyping.
-	EFM_ASSERT( EX2_DEVBOARD );
+	// EFM_ASSERT( EX2_DEVBOARD );
 
 
+#ifdef GECKO_M4
 	// Init display module.
 	DISPLAY_Init();
 
@@ -288,6 +309,7 @@ int main(void)
 	{
 		while (1) ;
 	}
+#endif
 
 	//SWO_SetupForPrint( );
 
@@ -333,9 +355,11 @@ int main(void)
 	GPIO_PinModeSet(BSP_GPIO_PB1_PORT, BSP_GPIO_PB1_PIN, gpioModeInputPull, 1);
 	GPIO_PinModeSet(BSP_GPIO_PB0_PORT, BSP_GPIO_PB0_PIN, gpioModeInputPull, 1);
 
-    // Enable the capacitive slider
+#ifdef GECKO_M4
+	// Enable the capacitive slider
 	CAPSENSE_Init( );
 	int nOldSliderPos = -1; // Not touched. Must call CAPSENSE_Sense( ) before doing CAPSENSE_getSliderPosition( );
+#endif
 
     /*capSlider.start();
     capSlider.attach_touch(touchCallback);
@@ -458,7 +482,8 @@ int main(void)
 			}
 		}
 
-#define SLIDER_MAX	48
+#ifdef GECKO_M4
+#	define SLIDER_MAX	48
 		CAPSENSE_Sense( );
 		int nSliderPos = CAPSENSE_getSliderPosition( );
 		if (nSliderPos >= 0  &&  nOldSliderPos != nSliderPos)
@@ -470,7 +495,7 @@ int main(void)
 			printf( "PA: %d\n", (int)nPA );
 			adf_set_tx_power( nPA );
 		}
-
+#endif
 
 		delay_ms( 500 );
 	}
