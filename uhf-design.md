@@ -157,9 +157,6 @@ The protocols outlined here allow some flexibility in how ground control interac
 For example, if increased reliability is needed, ground can issue one command per transmission, and receive replies to individual commands before issuing further commands.
 If increased throughput is needed, ground can append a list of commands in a single transmission and receive all replies at once.
 
-The protocols do not enforce a command and data format on the other boards. However, they strongly encourage that all responses or returned
-data are self-contained. Log data should include what board and log type is being returned. A command such as "eps.get-battery-v" should not return a message such as "15.0", but instead something like "eps.battv 15.0".
-
 Likely, adjustable maximum transmission lengths will need to be implemented. How this will be handled is TBD.
 
 ## Commands
@@ -172,6 +169,10 @@ and uploading firmware. The commands should follow a standard format that is sha
 The set of transceiver parameters that is ground-configurable is TBD. A risk is that it may be possible to incorrectly configure the satellite so that
 further communication is impossible. A last-defence solution is to allow watchdog code to detect this and 
 force a boot using a known working configuration vector.
+
+The protocols do not enforce a command and data format on the other boards. However, they strongly encourage that all responses or returned
+data are self-contained. Log data should include what board and log type is being returned. A command such as "eps.get-battery-v" should not 
+return a message such as "15.0", but instead something like "eps.battv 15.0".
 
 
 ## Fault Detection
