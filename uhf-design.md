@@ -44,13 +44,7 @@ responding to ground-control commands, all satellite modules' would have to impl
 In case the satellite has urgent information it needs to transmit, this state should be broadcast in beacons and in response to initiation
 of a communications session. Ground control can then request the urgent data at its perogative.
 
-If a satellite command requires a delay between receiving a request for information and responding, it should either be split into two
-commands ("prepare data"; "send data or data-not-ready"), or it should be a command that ground control is prepared to wait for. Otherwise, it's possible
-for both ground and satellite to attempt to begin a transmission at the same time, and for both to miss the other's message.
-Since there is a delay between switching the transceiver to transmit mode, sending the preamble and sync word, travel time of the message,
-and for the other to process that, it's not impossible for synchronization problems to crop up.
-
-Effectively, ground acts as master and the satellite as slave, in determining transmission timing.
+In determining transmission timing, ground should be treated as master and the satellite as slave.
 
 Ground control can further restrict the satellite from transmitting by disabling transmission, in which case data to be transmitted to ground
 could remain in RAM until transmission is re-enabled, ground control requests it to be purged, or the buffer is full and older messages
@@ -81,7 +75,7 @@ If useful, a sync word might be included between data blocks, to ensure the rece
 The Data field may be encrypted, with the intention that transmissions from ground control will be encrypted.
 
 A risk is that errors may occur in the Data length field, which must be detected and handled reasonably.
-If possible, the error correction may be applied to the length data as well.
+If possible, the error correction may be applied to the length field as well.
 
 The Data will likely exclusively consist of CSP packets.
 
@@ -98,46 +92,6 @@ The firmware may accept additional CSP packets for transmission while it is alre
 appended to the current transmission. The transmission ends when all buffered ground-bound data blocks have been sent; the satellite
 then sends an end marker and returns to Waiting mode.
 
-### Interaction
-
-A typical interaction depends on how ground control uses the system.
-
-Scenario 1:
-
-- Ground transmits a single command and waits to receive data.
-- The UHF module receives the data and passes it to the network stack, and returns to Waiting mode.
-- A single CSP message is received by the UHF module from the network, and is transmitted to ground, and the firmware continues Waiting.
-
-Scenario 2:
-
-- Ground transmits several commands in a single transmission, and waits to receive data.
-- The UHF module receives multiple data blocks, and passes them to the network stack while it continues receiving.
-- While it is still receiving, the UHF module begins to receive ground-bound data from the network, which is buffered.
-- The received message ends, and the satellite immediately begins to transmit buffered ground-bound data.
-- The UHF module continues to receive ground-bound data, which is appended to the end of the buffer.
-- Once all of the buffered data has been transmitted, the firmware returns to Waiting.
-
-
-When there are messages waiting to be sent, both ground and satellite begin transmitting as soon as the end of a reception has been reached.
-It remains possible for the UHF to send one CSP packet to ground, finish the transmission, and then have another CSP packet to transmit,
-for example if a reply to a command was significantly delayed by another satellite module. As designed, the satellite would send the first
-transmission, return to Waiting, and if it hasn't begun Receiving a message from ground, it will immediately transmit the second message.
-If ground has begun transmitting its own message after receiving the first from the satellite, then both ground and satellite will be
-transmitting, and both will fail to receive the other's message.
-
-To avoid this situation:
-
-- Commands should generally immediately respond to requests for data.
-- Commands that are known to have a delay can be waited on by ground control.
-- If desired, commands that take some time to process can be split into "begin execution" and "request data" commands, or can be designed
-to be called multiple times, ie. a command that responds with data or a "data not ready" reply.
-- If the above steps are insufficient, other rules might be implemented. For example, the satellite might be restricted from sending two
-transmissions in a row, and instead buffer the second transmission until after receiving another message. This way, ground knows that they
-can (and should) send another transmission as soon as it has completed receiving a message from the satellite.
-
-These protocols should be torture-tested in the lab with a wide range of short and long CSP packets, individual and groups of data blocks,
-and various artificial delays, to determine if the design is robust enough without needing to add additional rules for the satellite
-to enforce.
 
 ### Unreliability
 Due to the unreliable nature of radio communications, transmission success cannot be guaranteed.
@@ -173,6 +127,49 @@ force a boot using a known working configuration vector.
 The protocols do not enforce a command and data format on the other boards. However, they strongly encourage that all responses or returned
 data are self-contained. Log data should include what board and log type is being returned. A command such as "eps.get-battery-v" should not 
 return a message such as "15.0", but instead something like "eps.battv 15.0".
+
+### Interaction
+
+A typical interaction depends on how ground control uses the system.
+
+Scenario 1:
+
+- Ground transmits a single command and waits to receive data.
+- The UHF module receives the data and passes it to the network stack, and returns to Waiting mode.
+- A single CSP message is received by the UHF module from the network, and is transmitted to ground, and the firmware continues Waiting.
+
+Scenario 2:
+
+- Ground transmits several commands in a single transmission, and waits to receive data.
+- The UHF module receives multiple data blocks, and passes them to the network stack while it continues receiving.
+- While it is still receiving, the UHF module begins to receive ground-bound data from the network, which it stores in a transmit buffer until it can be later transmitted.
+- The received message ends, and the satellite immediately begins to transmit buffered ground-bound data.
+- The UHF module continues to receive ground-bound data, which is appended to the end of the buffer.
+- Once all of the buffered data has been transmitted, the firmware returns to Waiting.
+
+
+When there are messages waiting to be sent by either ground or satellite, either will begin transmitting as soon as the end of a reception has been reached.
+It remains possible for the UHF to send one CSP packet to ground, finish the transmission, and then have another CSP packet to transmit,
+for example if a reply to a command was significantly delayed. As designed above, the satellite would send the first
+transmission, return to Waiting, and if it hasn't begun Receiving a message from ground, it will immediately transmit the second message.
+If ground has begun transmitting its own message after receiving the first from the satellite, then both ground and satellite will be
+transmitting, and both will fail to receive the other's message.
+
+To avoid this situation:
+
+- Commands should generally immediately respond to requests for data without significant delay.
+- Commands that are known to have a delay can be waited on by ground control.
+- If desired, commands that take some time to process can be split into "begin execution" and "request data" commands, or can be designed
+to be called multiple times, ie. a command that responds with data or a "data not ready" reply.
+- If the above steps are insufficient, other rules might be implemented. For example, the satellite might be restricted from sending two
+transmissions in a row, and instead buffer the second transmission until after receiving another message. This way, ground knows that they
+can (and should) send another transmission as soon as it has completed receiving a message from the satellite. The satellite would strictly
+follow a turn-taking policy of transmission and reception, while the ground would do so selectively; this way, the ground is exclusively responsible for
+handling policy breakdown (eg. missed replies, etc.).
+
+These protocols should be torture-tested in the lab with a wide range of short and long CSP packets, individual and groups of data blocks,
+and various artificial delays, to determine if the design is robust enough without needing to add additional rules for the satellite
+to enforce.
 
 
 ## Fault Detection
