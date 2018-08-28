@@ -69,7 +69,7 @@ A framed data block consists of:
 
 The End marker is a value of 0 instead of a valid Data length.
 
-
+Preamble and sync word will follow recommendations given in the ADF7201 datasheet.
 If useful, a sync word might be included between data blocks, to ensure the receiver remains in sync.
 
 The Data field may be encrypted, with the intention that transmissions from ground control will be encrypted.
@@ -124,13 +124,16 @@ The set of transceiver parameters that is ground-configurable is TBD. A risk is 
 further communication is impossible. A last-defence solution is to allow watchdog code to detect this and 
 force a boot using a known working configuration vector.
 
-The protocols do not enforce a command and data format on the other boards. However, they strongly encourage that all responses or returned
-data are self-contained. Log data should include what board and log type is being returned. A command such as "eps.get-battery-v" should not 
-return a message such as "15.0", but instead something like "eps.battv 15.0".
+The protocols do not enforce a command and data format on the other boards, including whether either are binary or text messages.
+However, the protocols strongly encourage that all responses or returned
+data are atomic and independent of context.
+A command such as "eps.get-battery-v" should not
+return a context-dependent message such as "15.0", but instead something like "eps.battv 15.0".
+Log data should include what board (may be there already in CSP header) and log type is being returned, etc.
 
 ### Interaction
 
-A typical interaction depends on how ground control uses the system.
+A typical interaction between ground and satellite depends on how ground control uses the system.
 
 Scenario 1:
 
