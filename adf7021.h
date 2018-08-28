@@ -57,7 +57,6 @@
 #define ADF_PIN_SLE		gpioPortD, 11
 #define ADF_PIN_MUXOUT	gpioPortD, 12
 #define ADF_PIN_CE		gpioPortD, 8
-#error
 
 #elif defined( EX2_GIANT_M3 )
 // Ex2 Giant M3 STK3700 prototype.

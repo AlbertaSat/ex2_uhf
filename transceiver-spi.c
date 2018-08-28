@@ -70,7 +70,6 @@ volatile int slaveRxBufferIndex;
 
 #ifdef EX2_DEVBOARD
 
-#error
 #define USE_USART2
 #define TRX_USART			USART2
 #define TRX_USART_RX_IRQn 	USART2_RX_IRQn
@@ -258,7 +257,7 @@ void USART1_RX_IRQHandler(void)
  * @brief USARTx TX IRQ Handler
  *****************************************************************************/
 #ifdef USE_USART2
-void USART2_TX_IRQHandler(void) xxx
+void USART2_TX_IRQHandler(void)
 #else
 void USART1_TX_IRQHandler(void)
 #endif
