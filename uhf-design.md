@@ -14,8 +14,13 @@ The ADF7021 transceiver chip configuration code has been ported from BlueBox ope
 
 ## Communications
 
-This early design of communications protocols favours simplicity and minimal restrictions enforced by software, while 
+This early design of communications protocols favours simplicity of code and minimal restrictions enforced by software, while
 avoiding locking out the ability to add complexity or restrictions in later designs if needed.
+A goal is to have communications working functionally and reliably early on, when used by well-behaved peripherals (ie. which follow the suggestions below),
+after which additional feature design can be considered where necessary.
+A goal is to avoid trying to provide a general-purpose networking link that can handle arbitrary peripheral behaviour and all edge cases,
+which would involve complicated code that may take excessive development time to get working,
+or require features that may need to be cut or redesigned late in the project.
 
 The firmware is designed assuming half-duplex, unreliable communications.
 
@@ -126,10 +131,10 @@ force a boot using a known working configuration vector.
 
 The protocols do not enforce a command and data format on the other boards, including whether either are binary or text messages.
 However, the protocols strongly encourage that all responses or returned
-data are atomic and independent of context.
-A command such as "eps.get-battery-v" should not
+data are atomic and independent of context, wherever the context provided by the CSP header is insufficient.
+For example, a command such as "eps.get-battery-v" should not
 return a context-dependent message such as "15.0", but instead something like "eps.battv 15.0".
-Log data should include what board (may be there already in CSP header) and log type is being returned, etc.
+Log data should include what type of log is being transmitted, etc.
 
 ### Interaction
 
