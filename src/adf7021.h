@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "hwconfig.h"
 
 
 /* Board xtal frequency (MCU clock frequency???) */
@@ -47,32 +48,24 @@
 #ifdef EX2_DEVBOARD
 // Ex2 Pearl prototype.
 
-#define ADF_PINNUM_SWD	8
-#define ADF_PIN_SWD		gpioPortB, ADF_PINNUM_SWD
-
-//#define ADF_PIN_SCLK	gpioPortD, 9
-#define ADF_PIN_SCLK	gpioPortC, 11	// Moved to accommodate cable
-#define ADF_PIN_SREAD	gpioPortD, 10
-#define ADF_PIN_SDATA	gpioPortC, 10
-#define ADF_PIN_SLE		gpioPortD, 11
-#define ADF_PIN_MUXOUT	gpioPortD, 12
-#define ADF_PIN_CE		gpioPortD, 8
 
 #elif defined( EX2_GIANT_M3 )
 // Ex2 Giant M3 STK3700 prototype.
 
-#define ADF_PINNUM_SWD	11
-#define ADF_PIN_SWD		gpioPortB, ADF_PINNUM_SWD
+#define ADF_PIN_SWD	11
+#define ADF_PORTPIN_SWD		gpioPortB, ADF_PIN_SWD
 
-#define ADF_PIN_SCLK	gpioPortC, 6
-#define ADF_PIN_SREAD	gpioPortD, 4
-#define ADF_PIN_SDATA	gpioPortD, 6
-#define ADF_PIN_SLE		gpioPortD, 5
-#define ADF_PIN_MUXOUT	gpioPortD, 12
-#define ADF_PIN_CE		gpioPortB, 12
+#define ADF_PORTPIN_SCLK	gpioPortC, 6
+#define ADF_PORTPIN_SREAD	gpioPortD, 4
+#define ADF_PORTPIN_SDATA	gpioPortD, 6
+#define ADF_PORTPIN_SLE		gpioPortD, 5
+#define ADF_PORTPIN_MUXOUT	gpioPortD, 12
+#define ADF_PORTPIN_CE		gpioPortB, 12
 
+#endif
 
-#elif defined(BBSTANDARD)
+/*
+#if defined(BBSTANDARD)
 // Example configuration for AVR chips
 #define ADF_PORT_SWD		PORTE
 #define ADF_PORT_IN_SWD		PINE
@@ -109,6 +102,8 @@
 #define ADF_PORT_DIR_CE		DDRD
 #define ADF_CE 			7
 #endif //BBSTANDARD
+*/
+
 
 typedef union
 {

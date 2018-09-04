@@ -40,7 +40,7 @@ char transmitBuffer[] = "socks";
 //char receiveBuffer[BUFFERSIZE];
 char receiveBuffer2[BUFFERSIZE];
 
-
+char szDebugInput[256] = ".";
 
 
 //****************************************************************************************************************
@@ -91,14 +91,13 @@ EMSTATUS RETARGET_TextDisplayInit(void)
 #endif
 /**************************************************************************//**
  * @brief Receive a byte
- *    No input method from the text display is possible, thus we always
- *    return -1
  *
  * @return -1 on failure
  *****************************************************************************/
+volatile int32_t ITM_RxBuffer;
 int RETARGET_ReadChar(void)
 {
-  return -1;
+  return ITM_ReceiveChar( );
 }
 
 /**************************************************************************//**
@@ -167,7 +166,7 @@ void GPIO_EVEN_IRQHandler(void)
   /* Get all even interrupts. */
   iflags = GPIO_IntGetEnabled() & 0x00005555;
 
-  if (iflags & (1 << ADF_PINNUM_SWD))
+  if (iflags & (1 << ADF_PIN_SWD))
   {
 	  // Handle SWD pin interrupt
 	  printf( "**** SWD pin IRQ" );
@@ -207,7 +206,7 @@ void init(void)
   NVIC_ClearPendingIRQ(GPIO_EVEN_IRQn);
   NVIC_EnableIRQ(GPIO_EVEN_IRQn);
   //
-  GPIO_ExtIntConfig( ADF_PIN_SWD, ADF_PINNUM_SWD, true, false, true );
+  GPIO_ExtIntConfig( ADF_PORTPIN_SWD, ADF_PIN_SWD, true, false, true );
   //
   // Dispatch probably not needed
   //GPIOINT_CallbackRegister(ADF_PINNUM_SWD, HandleSWDIrq );
@@ -258,6 +257,7 @@ int main(void)
 
 	init( );
 
+
 	  /* Data transmission to slave */
 	  /* ************************** */
 	  /*Setting up both RX and TX interrupts for slave */
@@ -288,6 +288,7 @@ int main(void)
 
 	// Console output...
 	setupSWOForPrint( );
+	//RETARGET_SwoInit( );
 	printf( "printf test." );
 	ITM_SendChar( 'T' );
 	ITM_SendChar( 'e' );
@@ -424,9 +425,9 @@ int main(void)
 
 		if (GPIO_PinInGet( BSP_GPIO_PB0_PORT, BSP_GPIO_PB0_PIN ) == 0)
 		{
-#	define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PIN_##PINNAME )
-#	define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PIN_##PINNAME )
-#	define PINREAD( PINNAME )  GPIO_PinInGet( ADF_PIN_##PINNAME )
+#	define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PORTPIN_##PINNAME )
+#	define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PORTPIN_##PINNAME )
+#	define PINREAD( PINNAME )  GPIO_PinInGet( ADF_PORTPIN_##PINNAME )
 
 			// Reset the ADF...
 			switch( nResetState++ ) {
@@ -496,6 +497,16 @@ int main(void)
 			adf_set_tx_power( nPA );
 		}
 #endif
+
+		// Read commands from stdin/debug console
+		int cInputChar;
+		while ((cInputChar = getc( stdin )) != EOF)
+		{
+			printf( "%c", cInputChar );
+		}
+		cInputChar = ITM_ReceiveChar( );
+		printf( "%c", cInputChar );
+		printf( "%s", szDebugInput );
 
 		delay_ms( 500 );
 	}

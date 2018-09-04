@@ -37,6 +37,8 @@
 //#include <efm32pg12b_usart.h>
 #include "em_gpio.h"
 
+#include "hwconfig.h"
+
 
 /* Modifying the example code:
  * The example sets up SPI1 with USART1 as slave.
@@ -70,17 +72,6 @@ volatile int slaveRxBufferIndex;
 
 #ifdef EX2_DEVBOARD
 
-#define USE_USART2
-#define TRX_USART			USART2
-#define TRX_USART_RX_IRQn 	USART2_RX_IRQn
-#define TRX_USART_TX_IRQn 	USART2_TX_IRQn
-#define TRX_USE_PINROUTING_LOC1
-// The following pins must match the selected USART and location, according to MCU manual.
-#define TRX_PORT		gpioPortA	// Assuming all USART pins share one port.
-#define TRX_PIN_MOSI	6
-#define TRX_PIN_MISO	7
-#define TRX_PIN_CLK		8
-#define TRX_PIN_CS		9
 
 #elif defined( EX2_GIANT_M3 )
 
@@ -110,27 +101,13 @@ void SPI_setupSLAVE( )
 	spi->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;	// Clear old transfers/receptions
 	spi->IEN = 0;	// Disable interrupts
 	// Pin enable and routing...
-//#ifdef USART_ROUTELOC0_TXLOC_DEFAULT	// GG11 PG12 etc per-pin routing...
-#ifdef EX2_GIANT_M3
-	// GG1 etc: PEN and ROUTE are in the same variable
+#ifdef USART_ROUTE_TXPEN
+	// Older M3 GG etc: PEN and ROUTE are in the same variable
 	spi->ROUTE = USART_ROUTE_TXPEN | USART_ROUTE_RXPEN | USART_ROUTE_CLKPEN | USART_ROUTE_CSPEN | (TRX_LEGACY_LOCNUM << 8);
 #else
 	spi->ROUTEPEN = USART_ROUTEPEN_TXPEN | USART_ROUTEPEN_RXPEN | USART_ROUTEPEN_CLKPEN | USART_ROUTEPEN_CSPEN;
-	/* Sorry, this just ADDS a layer of confusion to the already horrible ROUTELOC0 defines...
-	//#define TRX_ROUTELOC_VAL	ROUTELOC_BITS( LOC1 )	// ROUTELOC_BITS is defined within code...
-
-	// This obfuscated macro assembles a set of USART_ROUTELOC0_xxxLOC_LOCnnn #defines
-#	define ROUTELOC_BITS( LOC )	(USART_ROUTELOC0_TXLOC_##LOC | USART_ROUTELOC0_RXLOC_##LOC \
-		  | USART_ROUTELOC0_CLKLOC_##LOC  / *| USART_ROUTELOC0_CSLOC_##TRX_LOC * /)
-	spi->ROUTELOC0 = TRX_ROUTELOC_VAL;
-	*/
-
-#	ifdef TRX_USE_PINROUTING_LOC1
-	spi->ROUTELOC0 = USART_ROUTELOC0_TXLOC_LOC1 | USART_ROUTELOC0_RXLOC_LOC1
-		  | USART_ROUTELOC0_CLKLOC_LOC1 | USART_ROUTELOC0_CSLOC_LOC1;
-#	else
-#	error No TRX routing location configured!
-#	endif
+	spi->ROUTELOC0 = CAT( USART_ROUTELOC0_TXLOC_,TRXLOC ) | CAT( USART_ROUTELOC0_RXLOC_,TRXLOC )
+		  | CAT( USART_ROUTELOC0_CLKLOC_,TRXLOC ) | CAT( USART_ROUTELOC0_CSLOC_,TRXCSLOC );
 #endif
 
 	// Enable TX and RX
@@ -142,10 +119,11 @@ void SPI_setupSLAVE( )
 	// Setup pins, configuring SPI slave mode
 	GPIO_PinModeSet( TRX_PORT, TRX_PIN_MOSI, gpioModeInput, 0);
 	GPIO_PinModeSet( TRX_PORT, TRX_PIN_MISO, gpioModePushPull, 0);
-	//GPIO_PinModeSet( TRX_PORT, TRX_PIN_CS,	gpioModeInput, 0);
-	// If not connecting the CS pin, configure it for open drain so it's always pulled low.
-	GPIO_PinModeSet( TRX_PORT, TRX_PIN_CS,	gpioModeWiredOrPullDown, 0);
 	GPIO_PinModeSet( TRX_PORT, TRX_PIN_CLK, gpioModeInput, 0);
+	// Since we're not connecting the CS pin, configure it for open drain so it's always pulled low.
+	GPIO_PinModeSet( TRX_PORT_CS, TRX_PIN_CS, gpioModeWiredOrPullDown, 0);
+	//GPIO_PinModeSet( TRX_PORT_CS, TRX_PIN_CS,	gpioModeInput, 0);
+
 }
 
 
@@ -168,10 +146,10 @@ void SPI2_setupRXInt(char* receiveBuffer, int receiveBufferSize)
   spi->CMD = USART_CMD_CLEARRX;
 
   /* Enable interrupts */
-  NVIC_ClearPendingIRQ(TRX_USART_RX_IRQn);
+  NVIC_ClearPendingIRQ( CAT( USARTn_,RX_IRQn) );
   if (receiveBuffer)
   {
-	  NVIC_EnableIRQ(TRX_USART_RX_IRQn);
+	  NVIC_EnableIRQ( CAT( USARTn_,RX_IRQn) );
 	  spi->IEN |= USART_IEN_RXDATAV;
   }
 }
@@ -196,10 +174,13 @@ void SPI2_setupTXInt(char* transmitBuffer, int transmitBufferSize)
   spi->CMD = USART_CMD_CLEARTX;
 
   /* Enable interrupts */
-  NVIC_ClearPendingIRQ(TRX_USART_TX_IRQn);
+#if (TRX_USART_TX_IRQn != CAT( TRX_USARTn_,RX_IRQn ))
+#error oops
+#endif
+  NVIC_ClearPendingIRQ( CAT(USARTn_,TX_IRQn) );
   if (transmitBuffer)
   {
-	  NVIC_EnableIRQ(TRX_USART_TX_IRQn);
+	  NVIC_EnableIRQ( CAT(USARTn_,TX_IRQn) );
 	  spi->IEN |= USART_IEN_TXBL;
   }
 }
@@ -228,11 +209,7 @@ void SPI2_setupSlaveInt(char* receiveBuffer, int receiveBufferSize, char* transm
 /**************************************************************************//**
  * @brief USARTx RX IRQ Handler
  *****************************************************************************/
-#ifdef USE_USART2
-void USART2_RX_IRQHandler(void)
-#else
-void USART1_RX_IRQHandler(void)
-#endif
+void CAT(USARTn_,RX_IRQHandler)(void)
 {
   USART_TypeDef *spi = TRX_USART;
   uint8_t       rxdata;
@@ -256,11 +233,7 @@ void USART1_RX_IRQHandler(void)
 /**************************************************************************//**
  * @brief USARTx TX IRQ Handler
  *****************************************************************************/
-#ifdef USE_USART2
-void USART2_TX_IRQHandler(void)
-#else
-void USART1_TX_IRQHandler(void)
-#endif
+void CAT(USARTn_,TX_IRQHandler)(void)
 {
   USART_TypeDef *spi = TRX_USART;
 

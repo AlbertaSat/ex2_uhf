@@ -31,9 +31,9 @@
 	// Assume EFM32...
 #	include "em_chip.h"
 
-#	define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PIN_##PINNAME )
-#	define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PIN_##PINNAME )
-#	define PINREAD( PINNAME )  GPIO_PinInGet( ADF_PIN_##PINNAME )
+#	define PINSET( PINNAME ) GPIO_PinOutSet( ADF_PORTPIN_##PINNAME )
+#	define PINCLEAR( PINNAME ) GPIO_PinOutClear( ADF_PORTPIN_##PINNAME )
+#	define PINREAD( PINNAME )  GPIO_PinInGet( ADF_PORTPIN_##PINNAME )
 
 // A quick EFM32 alternative for missing function
 void delay_ms(int nDelay) {
@@ -245,14 +245,14 @@ void adf_set_power_on(unsigned long adf_xtal)
 
 #ifdef _EFM_DEVICE
 	// -- Configure inputs
-	GPIO_PinModeSet(ADF_PIN_SWD, gpioModeInput, 0);
-	GPIO_PinModeSet(ADF_PIN_SREAD, gpioModeInput, 0);
-	GPIO_PinModeSet(ADF_PIN_MUXOUT, gpioModeInput, 0);
+	GPIO_PinModeSet(ADF_PORTPIN_SWD, gpioModeInput, 0);
+	GPIO_PinModeSet(ADF_PORTPIN_SREAD, gpioModeInput, 0);
+	GPIO_PinModeSet(ADF_PORTPIN_MUXOUT, gpioModeInput, 0);
 	// -- Configure outputs
-	GPIO_PinModeSet(ADF_PIN_SCLK, gpioModePushPull, 0);
-	GPIO_PinModeSet(ADF_PIN_SDATA, gpioModePushPull, 0);
-	GPIO_PinModeSet(ADF_PIN_SLE, gpioModePushPull, 0);
-	GPIO_PinModeSet(ADF_PIN_CE, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PORTPIN_SCLK, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PORTPIN_SDATA, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PORTPIN_SLE, gpioModePushPull, 0);
+	GPIO_PinModeSet(ADF_PORTPIN_CE, gpioModePushPull, 0);
 #elif defined(__AVR__)
 	/* Ensure the ADF GPIO port is correctly initialised */
 	ADF_PORT_DIR_SWD 	&= ~_BV(ADF_SWD);

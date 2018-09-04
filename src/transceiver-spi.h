@@ -1,4 +1,7 @@
 
+
+#include "hwconfig.h"
+
 // main
 #define HFRCO_FREQUENCY         14000000
 #define SPI_PERCLK_FREQUENCY    HFRCO_FREQUENCY
@@ -6,10 +9,6 @@
 
 
 // SPI
-
-//#define TRX_USART			USART2
-#define TRX_USART			USART1
-
 
 void SPI_setupSLAVE( );
 //void SPI3_setupRXInt(char* receiveBuffer, int bytesToReceive);
@@ -21,4 +20,3 @@ void SPI2_setupSlaveInt(char* receiveBuffer, int receiveBufferSize, char* transm
 #define NO_RX                    0
 #define NO_TX                    NO_RX
 
-void USART3_sendBuffer(char*, int);
