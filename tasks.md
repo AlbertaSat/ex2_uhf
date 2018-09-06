@@ -1,4 +1,4 @@
-### Later:
+### Unassigned long-term tasks:
 - Encryption of uplink transmissions (and whitening of unencrypted?)
 - Board state handling (power, TRx mode, etc)
 - Interface with board peripherals (temperature, USB, PA, etc...)
@@ -7,10 +7,10 @@
 - Command processing and transmit data queuing.
 - Housekeeping data logging and transmission.
 
-### Next (in reverse order):
+### Unassigned upcoming tasks (in reverse order):
+- Semaphores for flagging info from IRQ handlers. Might be enough to have eg. "g_bReceivedData = true" inside the handler, but outside should be SafeCheckAndSet( &g_bReceivedData, false ); which would do something like "Disable interrupts, read value, set value, enable interrupts, return value."
 - Add a HAL (Main application code should ideally avoid any pin/hardware manipulation, MCU-specific code, or calls that assume existence of specific chips. Move them out to functions such as "InitMCU( )", or "EnableTransceiver( )" etc.).
 - Create unit-tests (for software components only?)
-- Make a prototype flatsat: UHF comms from groundstation, message parsing/routing, prototype command interpreter.
 - Incorporate FreeRTOS and I2C networking.
 - Diagnostics: RSSI, signal lock, ...
 - Begin framing messages: Rx: Detect beginning, read data, detect end, dispatch message. Tx: Package message incl SW, start Tx, shut down cleanly.
@@ -20,11 +20,17 @@
 - Set up SWD: Configure TRx; enable and handle interrupt; transmit SW.
 <br>	Handle irq: Disable SWD (int and or adf?), enable receiving (spi int?). Then enable spi when receive (or Tx!) is finished.
 - Figure out interface to in-house board: JTag, or USB? Note USB might not be used immediately if it needs firmware uploaded first??? Or is UART flashing interface built-in?
-- Configure multiple clients and port code if necessary; ensure sane radio configuration; <strike>enable variable power amp (done-ish).</strike>
+- Verify the project can be built from scratch by other members on other OSes (verified so far: Linux).
+
+### Assigned in-progress tasks: (M-Michael, ...)
+- M: Make a prototype flatsat: UHF comms from groundstation, message parsing/routing, prototype command interpreter.
+- M: Add console output of received data so that it can be searched for test signals. Disable/reduce current printf spam.
+- M: Configure multiple clients and port code if necessary; ensure sane radio configuration; <strike>enable variable power amp (done-ish).</strike>
 <br>	Make a ex2\_uhf\_flatsat\_v1 project. Copy/link the prototype code. Use add symbol "EX2\_FLATSAT\_V1". Configure pins for it.
 <br>	#define-out input, display etc. that's not on the flatsat. By default this should go into receive/print mode without need for input.
-- Add console output of received data so that it can be searched for test signals. Disable/reduce current printf spam.
-- In progress: Design and implement better hardware options switching, including: a) board and pin layout choices, b) ground vs sat prototypes, c) optional board hardware including development-only features (buttons, displays, debug output).
+- M: Design and implement better hardware options switching, including: a) board and pin layout choices, b) ground vs sat prototypes, c) optional board hardware including development-only features (buttons, displays, debug output).
+<br>	... including code cleanup, separation of experimental code from production code and optional features code.
+<br>	... and maybe some HAL to remove pin config etc. out of the main app. (New main app can be created from scratch.)
 
 ### Major changes history:
 - 2018-09-03:	Code and devboard configurations cleanup.
