@@ -7,7 +7,7 @@
 - Command processing and transmit data queuing.
 - Housekeeping data logging and transmission.
 
-### Unassigned upcoming tasks (in reverse order):
+### Unassigned upcoming tasks (roughly in reverse order):
 - Semaphores for flagging info from IRQ handlers. Might be enough to have eg. "g_bReceivedData = true" inside the handler, but outside should be SafeCheckAndSet( &g_bReceivedData, false ); which would do something like "Disable interrupts, read value, set value, enable interrupts, return value."
 - Add a HAL (Main application code should ideally avoid any pin/hardware manipulation, MCU-specific code, or calls that assume existence of specific chips. Move them out to functions such as "InitMCU( )", or "EnableTransceiver( )" etc.).
 - Create unit-tests (for software components only?)
@@ -32,9 +32,9 @@
 <br>	... including code cleanup, separation of experimental code from production code and optional features code.
 <br>	... and maybe some HAL to remove pin config etc. out of the main app. (New main app can be created from scratch.)
 
-### Major changes history:
-- 2018-09-03:	Code and devboard configurations cleanup.
-- 2018-08-06:	Adapted SPI example code for TRx with MCU in slave mode. Bug fixes.
-- 2018-07-28:	Configuring adf7021 to match dev board prototype wiring; test MCU configurations, TRx config and readback functions.
-- 2018-07-26:	Ported adf7021 code to EFM.
-- 2018-07-16:	Using bluebox adf7021 code as a starting point.
+### Completed tasks/changes history:
+- 2018-09-03:	Code and devboard configurations re-organization.
+- 2018-08-06:	Adapt SPI example code for TRx with MCU in slave mode.
+- 2018-07-28:	Configure adf7021 to match dev board prototype wiring; test MCU configurations, TRx config and readback functions.
+- 2018-07-26:	Port adf7021 code to EFM.
+- 2018-07-16:	Incorporate original bluebox adf7021 code as a starting point.
