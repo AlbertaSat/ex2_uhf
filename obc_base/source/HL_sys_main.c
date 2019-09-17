@@ -8,7 +8,7 @@
 */
 
 /* 
-* Copyright (C) 2009-2015 Texas Instruments Incorporated - www.ti.com
+* Copyright (C) 2009-2018 Texas Instruments Incorporated - www.ti.com  
 * 
 * 
 *  Redistribution and use in source and binary forms, with or without 
@@ -32,14 +32,15 @@
 *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
 *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-*  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES INCLUDING, BUT NOT
+*  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
 *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-*  DATA, OR PROFITS; OR BUSINESS INTERRUPTION HOWEVER CAUSED AND ON ANY
+*  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-*  INCLUDING NEGLIGENCE OR OTHERWISE ARISING IN ANY WAY OUT OF THE USE
+*  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 */
+
 
 /* USER CODE BEGIN (0) */
 /* USER CODE END */
@@ -56,6 +57,7 @@
 /* Include HET header file - types, definitions and function declarations for system driver */
 #include "HL_het.h"
 #include "HL_gio.h"
+#include "adf7021.h"
 
 /* Define Task Handles */
 xTaskHandle xTask1Handle;
@@ -65,24 +67,28 @@ void vTask1(void *pvParameters)
 {
     for(;;)
     {
-        /* Taggle HET[1] with timer tick */
-        gioSetBit(gioPORTB, 6, gioGetBit(gioPORTB, 6) ^ 1);
-        vTaskDelay(100);
+        adf_set_power_on( XTAL_FREQ );
+        adf_configure();
+        adf_set_rx_mode();
     }
 }
 /* USER CODE END */
 
-
 /** @fn void main(void)
 *   @brief Application main function
+*   @note This function is empty by default.
 *
+*   This function is called after startup.
+*   The user can use this function to implement the application.
 */
 
 /* USER CODE BEGIN (2) */
 /* USER CODE END */
 
+uint8	emacAddress[6U] = 	{0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
+uint32 	emacPhyAddress	=	1U;
 
-void main(void)
+int main(void)
 {
 /* USER CODE BEGIN (3) */
 
@@ -104,6 +110,8 @@ void main(void)
     /* Run forever */
     while(1);
 /* USER CODE END */
+
+    return 0;
 }
 
 

@@ -31,8 +31,8 @@
 
 
 /* Board xtal frequency (MCU clock frequency???) */
-#define XTAL_FREQ 		16000000	// bluebox
-//#define XTAL_FREQ 		14000000	// PG12 default CPU freq
+//#define XTAL_FREQ 		16000000	// bluebox
+#define XTAL_FREQ 		14000000	// PG12 default CPU freq
 //#define XTAL_FREQ 		1000000		// low freq test
 
 // Bitfields must be left in position and not be aligned to word or byte boundaries
