@@ -25,15 +25,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 // Platform-specific GPIO
 #ifndef __AVR__	// For non-AVR MCUs...
 	// Assume TI...
 #	include "HL_gio.h"
 
-#	define PINSET( PINNAME ) gioSetBit( ADF_PORTPIN_##PINNAME, 1 )
-#	define PINCLEAR( PINNAME ) gioSetBit( ADF_PORTPIN_##PINNAME, 0 )
-#	define PINREAD( PINNAME )  gioGetPort( ADF_PORTPIN_##PINNAME )
+#	define PINSET( PINNAME ) gioSetBit( gioPORTA, PINNAME, 1 )
+#	define PINCLEAR( PINNAME ) gioSetBit( gioPORTA, PINNAME, 0 )
+#	define PINREAD( PINNAME )  bitFromPort( gioPORTA, PINNAME )
 
 // A quick EFM32 alternative for missing function
 void delay_ms(int nDelay) {
@@ -243,6 +242,10 @@ void adf_set_power_on(unsigned long adf_xtal)
 	/* Store locally the oscillator frequency */
 	sys_conf.adf_xtal = adf_xtal;
 
+	gioSetDirection(gioPORTA, 0x00000087); // Reference SPI Mode to Microcontroller Interface and gio
+
+	// Check if muxout high to see if programming can begin
+/*
 #ifdef _EFM_DEVICE
 	// -- Configure inputs
 	GPIO_PinModeSet(ADF_PORTPIN_SWD, gpioModeInput, 0);
@@ -254,7 +257,7 @@ void adf_set_power_on(unsigned long adf_xtal)
 	GPIO_PinModeSet(ADF_PORTPIN_SLE, gpioModePushPull, 0);
 	GPIO_PinModeSet(ADF_PORTPIN_CE, gpioModePushPull, 0);
 #elif defined(__AVR__)
-	/* Ensure the ADF GPIO port is correctly initialised */
+	// Ensure the ADF GPIO port is correctly initialised
 	ADF_PORT_DIR_SWD 	&= ~_BV(ADF_SWD);
 	ADF_PORT_DIR_SCLK 	|=  _BV(ADF_SCLK);
 	ADF_PORT_DIR_SREAD	&= ~_BV(ADF_SREAD);
@@ -265,7 +268,7 @@ void adf_set_power_on(unsigned long adf_xtal)
 #else
 #	error Pins not configured!
 #endif
-
+*/
 	// Enable the ADF
 	PINSET( CE );
 
@@ -680,3 +683,8 @@ void adf_reset(void)
 	adf_configure();
 }
 
+uint8 bitFromPort(gioPORT_t *port, uint32 bit)
+{
+    uint32 portRead = gioGetPort( port );
+    uint8 val = (portRead >> bit) & 0x01;
+}

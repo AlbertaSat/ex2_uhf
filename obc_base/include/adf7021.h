@@ -45,6 +45,13 @@
 // ************************************************************************
 // Pin configurations for different hardware implementations:
 
+#define SWD     6
+
+#define SCLK    0
+#define SREAD   5
+#define SDATA   1
+#define SLE     2
+#define CE      7
 #ifdef EX2_DEVBOARD
 // Ex2 Pearl prototype.
 
@@ -76,7 +83,7 @@ MUX?       | o  o |    CE
            |______|
 */
 
-
+/*
 #define ADF_PIN_SWD	11
 #define ADF_PORTPIN_SWD		gioPORTA, 6
 
@@ -86,6 +93,14 @@ MUX?       | o  o |    CE
 #define ADF_PORTPIN_SLE		gioPortA, 2
 #define ADF_PORTPIN_MUXOUT	giopPortD, 12
 #define ADF_PORTPIN_CE		gioPortA, 7
+*/
+#define SWD     6
+
+#define SCLK    0
+#define SREAD   5
+#define SDATA   1
+#define SLE     2
+#define CE      7
 
 #endif
 
