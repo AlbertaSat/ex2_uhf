@@ -1,0 +1,21 @@
+SPNU501E.pdf is a file that describes the contents of F021_API and how to use them
+
+sys_startup.c The start-up code used when TI’s Code Composer Studio compiler is being used to build the
+bootloader.
+sys_intvecs.asm Interrupt vectors
+sys_core.asm Initialize the core registers, stack pointers , memory, and so forth
+system.c Configure PLL, enable peripherals, and so forth
+bl_main.c The main control loop of the bootloader
+bl_can.c The functions for transferring data via the CAN1 port
+bl_check.c The code to check if a firmware update is required, or if a firmware update is being requested.
+hw_pinmux.c Function that defines the pinmux
+sci_common.c Low-level SCI driver
+bl_link.cmd The linker script used when the Code Composer Studio compiler is being used to build the
+bootloader.
+bl_flash.c The functions for erasing, programming the Flash, and functions for erase and program check
+bl_commands.h The list of commands and return messages supported by the bootloader.
+bl_config.h Bootloader configuration file. This contains all of the possible configuration values.
+bl_flash.h Prototypes for Flash operations
+bl_can.h Prototypes for the CAN transfer functions.
+bw_can.h Prototypes for the low-level CAN transfer functions.
+hw_pinmux.h Prototypes for pinmux functions

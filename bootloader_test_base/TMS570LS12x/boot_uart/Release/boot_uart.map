@@ -1,0 +1,473 @@
+******************************************************************************
+                  TI ARM Linker PC v5.1.0                      
+******************************************************************************
+>> Linked Mon Aug 12 13:54:15 2013
+
+OUTPUT FILE NAME:   <boot_uart.out>
+ENTRY POINT SYMBOL: "_c_int00"  address: 00003328
+
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+  VECTORS               00000000   00000020  00000020  00000000     X
+  FLASH_API             00000020   000014e0  0000104a  00000496  R  X
+  FLASH0                00001500   002feb00  000037ba  002fb346  R  X
+  STACK                 08000000   00002000  00000000  00002000  RW  
+  SRAM                  08002000   0002d000  00001507  0002baf9  RW  
+
+
+SEGMENT ALLOCATION MAP
+
+run origin  load origin   length   init length attrs members
+----------  ----------- ---------- ----------- ----- -------
+00000000    00000000    00000020   00000020    r-x
+  00000000    00000000    00000020   00000020    r-x .intvecs
+00001500    00001500    000037c0   000037c0    r-x
+  00001500    00001500    00003408   00003408    r-x .text
+  00004908    00004908    00000362   00000362    r-- .const
+  00004c70    00004c70    00000050   00000050    r-- .cinit
+08002000    00000020    0000104a   0000104a    r-x
+  08002000    00000020    0000104a   0000104a    r-x flashAPI
+0800304c    0800304c    000004c0   00000000    rw-
+  0800304c    0800304c    00000449   00000000    rw- .data
+  08003498    08003498    00000074   00000000    rw- .bss
+
+
+SECTION ALLOCATION MAP
+
+ output                                  attributes/
+section   page    origin      length       input sections
+--------  ----  ----------  ----------   ----------------
+.intvecs   0    00000000    00000020     
+                  00000000    00000020     sys_intvecs.obj (.intvecs)
+
+flashAPI   0    00000020    0000104a     RUN ADDR = 08002000
+                  00000020    00000068     Fapi_UserDefinedFunctions.obj (.text)
+                  00000088    00000810     bl_flash.obj (.text)
+                  00000898    0000025c     F021_API_CortexR4_BE.lib : FlashStateMachine.InitializeFlashBanks.obj (.text:Fapi_initializeFlashBanks)
+                  00000af4    00000178                              : FlashStateMachine.SetActiveBank.obj (.text:Fapi_setActiveFlashBank)
+                  00000c6c    00000174                              : Program.obj (.text:Fapi_issueProgrammingCommand)
+                  00000de0    0000007c                              : Read.Common.obj (.text:_Fapi_enterMarginMode)
+                  00000e5c    0000004c                              : FlashStateMachine.EnableMainSectors.obj (.text:Fapi_enableMainBankSectors)
+                  00000ea8    00000040                              : Read.MarginByByte.obj (.text:Fapi_doMarginReadByByte)
+                  00000ee8    0000003c                              : FlashStateMachine.IssueFsmCommand.obj (.text:_Fapi_issueFsmCommand)
+                  00000f24    00000030                              : Async.WithAddress.obj (.text:Fapi_issueAsyncCommandWithAddress)
+                  00000f54    00000030                              : Utilities.WaitDelay.obj (.text:Fapi_waitDelay)
+                  00000f84    00000030                              : Read.Common.obj (.text:_Fapi_exitMarginMode)
+                  00000fb4    0000002c                              : Utilities.CalculateFletcher.obj (.text:Fapi_calculateFletcherChecksum)
+                  00000fe0    00000022                              : Read.FlushPipeline.obj (.text:Fapi_flushPipeline)
+                  00001002    0000001c                              : FlashStateMachine.InitializeFlashBanks.obj (.text:_Fapi_divideUnsignedLong)
+                  0000101e    00000002     --HOLE-- [fill = 0]
+                  00001020    00000014                              : Utilities.CalculateEcc.obj (.text:Fapi_calculateEcc)
+                  00001034    00000010                              : FlashStateMachine.ScaleFclk.obj (.text:_scaleEEFclk)
+                  00001044    00000010                              : FlashStateMachine.ScaleFclk.obj (.text:_scaleMainFclk)
+                  00001054    0000000c                              : Read.WdService.obj (.text:_Fapi_checkWdService)
+                  00001060    0000000a     Fapi_UserDefinedFunctions.obj (.tramp.Fapi_serviceWatchdogTimer.1)
+
+.text      0    00001500    00003408     
+                  00001500    00000b04     bl_ymodem.obj (.text)
+                  00002004    00000768     sci_common.obj (.text)
+                  0000276c    000006b8     bl_uart.obj (.text)
+                  00002e24    00000504     hw_sci.obj (.text)
+                  00003328    000002e0     sys_startup.obj (.text:retain)
+                  00003608    000002e0     system.obj (.text)
+                  000038e8    00000288     sys_core.obj (.text)
+                  00003b70    00000214     rtsv7R4_A_be_eabi.lib : fd_add32.obj (.text)
+                  00003d84    00000190                           : fd_div32.obj (.text)
+                  00003f14    00000180                           : memcpy32.obj (.text)
+                  00004094    00000150     sw_hw_ver.obj (.text)
+                  000041e4    00000130     hw_esm.obj (.text:retain)
+                  00004314    00000114     bl_main.obj (.text)
+                  00004428    000000ec     bl_check.obj (.text)
+                  00004514    000000dc     bl_led_demo.obj (.text)
+                  000045f0    00000098     rtsv7R4_A_be_eabi.lib : copy_decompress_rle.obj (.text)
+                  00004688    00000080                           : cpy_tbl.obj (.text)
+                  00004708    00000078                           : exit.obj (.text)
+                  00004780    00000058                           : fd_tou32.obj (.text)
+                  000047d8    00000054                           : u_div32.obj (.text)
+                  0000482c    00000034                           : u_tofd32.obj (.text)
+                  00004860    00000024                           : _lock.obj (.text)
+                  00004884    00000020                           : copy_zero_init.obj (.text:decompress:ZI)
+                  000048a4    00000020     notification.obj (.text)
+                  000048c4    00000014     rtsv7R4_A_be_eabi.lib : copy_decompress_none.obj (.text:decompress:none)
+                  000048d8    00000008                           : copy_decompress_rle.obj (.text:decompress:rle24)
+                  000048e0    00000004     sys_phantom.obj (.text:retain)
+                  000048e4    0000000c     bl_flash.obj (.tramp.Fapi_BlockProgram.1)
+                  000048f0    0000000c     bl_flash.obj (.tramp.Fapi_BlockErase.1)
+                  000048fc    0000000c     bl_flash.obj (.tramp.BLInternalFlashStartAddrCheck.1)
+
+.const     0    00004908    00000362     
+                  00004908    00000204     sys_startup.obj (.const:s_vim_init)
+                  00004b0c    00000140     bl_flash.obj (.const:flash_sector)
+                  00004c4c    00000014     bl_flash.obj (.const)
+                  00004c60    0000000a     bl_uart.obj (.const:.string)
+
+.cinit     0    00004c70    00000050     
+                  00004c70    00000028     (.cinit..data.load) [load image, compression = rle]
+                  00004c98    0000000c     (__TI_handler_table)
+                  00004ca4    00000004     --HOLE-- [fill = 0]
+                  00004ca8    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  00004cb0    00000010     (__TI_cinit_table)
+
+.data      0    0800304c    00000449     UNINITIALIZED
+                  0800304c    00000400     bl_uart.obj (.data:tab_1024)
+                  0800344c    0000002c     bl_main.obj (.data)
+                  08003478    00000008     F021_API_CortexR4_BE.lib : FlashStateMachine.ScaleFclk.obj (.data)
+                  08003480    00000008     rtsv7R4_A_be_eabi.lib : _lock.obj (.data)
+                  08003488    00000008                           : exit.obj (.data)
+                  08003490    00000004     bl_ymodem.obj (.data)
+                  08003494    00000001     F021_API_CortexR4_BE.lib : FlashStateMachine.SetActiveBank.obj (.data)
+
+.bss       0    08003498    00000074     UNINITIALIZED
+                  08003498    00000040     bl_ymodem.obj (.bss:file_name)
+                  080034d8    00000018     (.common:g_sciTransfer)
+                  080034f0    0000000c     (.common:num_str$1)
+                  080034fc    00000004     (.common:JumpAddress)
+                  08003500    00000004     (.common:delayval$1)
+                  08003504    00000004     (.common:g_ulForced)
+                  08003508    00000004     (.common:g_ulTransferAddress)
+
+
+LINKER GENERATED COPY TABLES
+
+__TI_cinit_table @ 00004cb0 records: 2, size/record: 8, table size: 16
+	.data: load addr=00004c70, load size=00000028 bytes, run addr=0800304c, run size=00000449 bytes, compression=rle
+	.bss: load addr=00004ca8, load size=00000008 bytes, run addr=08003498, run size=00000074 bytes, compression=zero_init
+
+
+LINKER GENERATED HANDLER TABLE
+
+__TI_handler_table @ 00004c98 records: 3, size/record: 4, table size: 12
+	index: 0, handler: __TI_decompress_rle24
+	index: 1, handler: __TI_decompress_none
+	index: 2, handler: __TI_zero_init
+
+VENEERS
+
+callee name               veneer name
+   callee addr  veneer addr  call addr  call info
+--------------  -----------  ---------  ----------------
+Fapi_serviceWatchdogTimer  $Ven$TA$L$PI$$Fapi_serviceWatchdogTimer
+   08002000     08003040     0800303a   F021_API_CortexR4_BE.lib : Read.WdService.obj (.text:_Fapi_checkWdService)
+
+[1 trampolines]
+[1 trampoline calls]
+
+
+FAR CALL TRAMPOLINES
+
+callee name               trampoline name
+   callee addr  tramp addr   call addr  call info
+--------------  -----------  ---------  ----------------
+Fapi_BlockProgram         $Tramp$AA$L$PI$$Fapi_BlockProgram
+   08002480     000048e4     00001a40   bl_ymodem.obj (.text)
+                             00001b84   bl_ymodem.obj (.text)
+Fapi_BlockErase           $Tramp$AA$L$PI$$Fapi_BlockErase
+   08002194     000048f0     000019ac   bl_ymodem.obj (.text)
+BLInternalFlashStartAddrCheck  $Tramp$AA$L$PI$$BLInternalFlashStartAddrCheck
+   080020b8     000048fc     00001968   bl_ymodem.obj (.text)
+
+[3 trampolines]
+[4 trampoline calls]
+
+
+GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
+
+address    name
+--------   ----
+08002068   BLInternalFlashFirstSectorSizeGet
+08002090   BLInternalFlashSizeGet
+080020b8   BLInternalFlashStartAddrCheck
+00004708   C$$EXIT
+000044a8   CheckForceUpdate
+00004428   CheckGPIOForceUpdate
+000043ac   ConfigureSPIDevice
+000043bc   ConfigureUartDevice
+08002194   Fapi_BlockErase
+08002480   Fapi_BlockProgram
+080027b8   Fapi_BlockRead
+08002650   Fapi_UpdateStatusProgram
+08003001   Fapi_calculateEcc
+08002f95   Fapi_calculateFletcherChecksum
+08002e89   Fapi_doMarginReadByByte
+08002e3d   Fapi_enableMainBankSectors
+08002fc1   Fapi_flushPipeline
+08002879   Fapi_initializeFlashBanks
+08002f05   Fapi_issueAsyncCommandWithAddress
+08002c4d   Fapi_issueProgrammingCommand
+08002000   Fapi_serviceWatchdogTimer
+08002ad5   Fapi_setActiveFlashBank
+08002034   Fapi_setupBankSectorEnable
+08002008   Fapi_setupEepromSectorEnable
+08002f35   Fapi_waitDelay
+08003490   FlashDestination
+0800276c   Flash_Erase_Check
+08002714   Flash_Program_Check
+00002004   Int2Str
+080034fc   JumpAddress
+UNDEFED    SHT$$INIT_ARRAY$$Base
+UNDEFED    SHT$$INIT_ARRAY$$Limit
+000020f8   Str2Int
+000025c0   U32toStr
+0000276c   UART_Download
+00002880   UART_Upload
+000024b0   UART_getChar
+00002474   UART_getKey
+0000272c   UART_putChar
+000026ec   UART_putString
+00002514   UART_rxByte
+0000264c   UART_send32BitData
+0000258c   UART_txByte
+00002968   UpdaterUART
+00001754   Ymodem_Receive
+00001f04   Ymodem_Transmit
+08003035   _Fapi_checkWdService
+08002dc1   _Fapi_enterMarginMode
+08002f65   _Fapi_exitMarginMode
+08002ec9   _Fapi_issueFsmCommand
+00004cb0   __TI_CINIT_Base
+00004cc0   __TI_CINIT_Limit
+00004c98   __TI_Handler_Table_Base
+00004ca4   __TI_Handler_Table_Limit
+00003b68   __TI_PINIT_Base
+00003b6c   __TI_PINIT_Limit
+08003488   __TI_cleanup_ptr
+000048c4   __TI_decompress_none
+000048d8   __TI_decompress_rle24
+0800348c   __TI_dtors_ptr
+00000000   __TI_static_base__
+00004884   __TI_zero_init
+00004780   __aeabi_d2uiz
+00003b7c   __aeabi_dadd
+00003d84   __aeabi_ddiv
+00003b70   __aeabi_dsub
+00003f14   __aeabi_memcpy
+00003f14   __aeabi_memcpy4
+00003f14   __aeabi_memcpy8
+0000482c   __aeabi_ui2d
+000047d8   __aeabi_uidivmod
+ffffffff   __binit__
+ffffffff   __c_args__
+00003328   _c_int00
+00003994   _copyAPI2RAM_
+00003a2c   _coreDisableEventBusExport_
+00003a90   _coreDisableFlashEcc_
+00003a5c   _coreDisableRamEcc_
+00003a14   _coreEnableEventBusExport_
+00003a74   _coreEnableFlashEcc_
+00003aa8   _coreEnableIrqVicOffset_
+00003a44   _coreEnableRamEcc_
+00003a10   _coreEnableVfp_
+000038e8   _coreInitRegisters_
+000039c4   _coreInitStackPointer_
+00003ac8   _disable_FIQ_interrupt_
+00003ad0   _disable_IRQ_interrupt_
+00003ac0   _disable_interrupt_
+00003ad8   _enable_interrupt_
+00003ae0   _esmCcmErrorsClear_
+08003480   _lock
+00004878   _nop
+0000486c   _register_lock
+00004860   _register_unlock
+08003015   _scaleEEFclk
+08003025   _scaleMainFclk
+08003484   _unlock
+00004710   abort
+00000020   api_load
+08002000   api_run
+0000104a   api_size
+ffffffff   binit
+00004688   copy_in
+00004314   delay
+000048a4   esmGroup1Notification
+000048b4   esmGroup2Notification
+000041e4   esmHighInterrupt
+0000471c   exit
+08003498   file_name
+00004c4c   flash_bank
+00004b0c   flash_sector
+0800344c   g_pulUpdateSuccess
+080034d8   g_sciTransfer
+08003504   g_ulForced
+08003508   g_ulTransferAddress
+08003474   g_ulUpdateBufferSize
+0800346c   g_ulUpdateStatusAddr
+08003470   g_ulVectorTable
+000040a8   get_hardware_Info
+00004094   get_software_Version
+00004354   main
+0000371c   mapClocks
+00003f14   memcpy
+000036c4   periphInit
+000048e0   phantomInterrupt
+00004514   run_LED_StartUp
+00002e24   sciInit
+00003178   sciIsRxReady
+00003018   sciIsTxReady
+000031fc   sciReceive
+000031c4   sciReceiveByte
+00003194   sciRxError
+00003064   sciSend
+00003034   sciSendByte
+00002f8c   sciSetBaudrate
+00002f6c   sciSetFunctional
+00001d9c   send_dataPacket
+00003684   setupFlash
+00003608   setupPLL
+000037f4   systemInit
+00003864   systemPowerDown
+0800304c   tab_1024
+0000363c   trimLPO
+
+
+GLOBAL SYMBOLS: SORTED BY Symbol Address 
+
+address    name
+--------   ----
+00000000   __TI_static_base__
+00000020   api_load
+0000104a   api_size
+00001754   Ymodem_Receive
+00001d9c   send_dataPacket
+00001f04   Ymodem_Transmit
+00002004   Int2Str
+000020f8   Str2Int
+00002474   UART_getKey
+000024b0   UART_getChar
+00002514   UART_rxByte
+0000258c   UART_txByte
+000025c0   U32toStr
+0000264c   UART_send32BitData
+000026ec   UART_putString
+0000272c   UART_putChar
+0000276c   UART_Download
+00002880   UART_Upload
+00002968   UpdaterUART
+00002e24   sciInit
+00002f6c   sciSetFunctional
+00002f8c   sciSetBaudrate
+00003018   sciIsTxReady
+00003034   sciSendByte
+00003064   sciSend
+00003178   sciIsRxReady
+00003194   sciRxError
+000031c4   sciReceiveByte
+000031fc   sciReceive
+00003328   _c_int00
+00003608   setupPLL
+0000363c   trimLPO
+00003684   setupFlash
+000036c4   periphInit
+0000371c   mapClocks
+000037f4   systemInit
+00003864   systemPowerDown
+000038e8   _coreInitRegisters_
+00003994   _copyAPI2RAM_
+000039c4   _coreInitStackPointer_
+00003a10   _coreEnableVfp_
+00003a14   _coreEnableEventBusExport_
+00003a2c   _coreDisableEventBusExport_
+00003a44   _coreEnableRamEcc_
+00003a5c   _coreDisableRamEcc_
+00003a74   _coreEnableFlashEcc_
+00003a90   _coreDisableFlashEcc_
+00003aa8   _coreEnableIrqVicOffset_
+00003ac0   _disable_interrupt_
+00003ac8   _disable_FIQ_interrupt_
+00003ad0   _disable_IRQ_interrupt_
+00003ad8   _enable_interrupt_
+00003ae0   _esmCcmErrorsClear_
+00003b68   __TI_PINIT_Base
+00003b6c   __TI_PINIT_Limit
+00003b70   __aeabi_dsub
+00003b7c   __aeabi_dadd
+00003d84   __aeabi_ddiv
+00003f14   __aeabi_memcpy
+00003f14   __aeabi_memcpy4
+00003f14   __aeabi_memcpy8
+00003f14   memcpy
+00004094   get_software_Version
+000040a8   get_hardware_Info
+000041e4   esmHighInterrupt
+00004314   delay
+00004354   main
+000043ac   ConfigureSPIDevice
+000043bc   ConfigureUartDevice
+00004428   CheckGPIOForceUpdate
+000044a8   CheckForceUpdate
+00004514   run_LED_StartUp
+00004688   copy_in
+00004708   C$$EXIT
+00004710   abort
+0000471c   exit
+00004780   __aeabi_d2uiz
+000047d8   __aeabi_uidivmod
+0000482c   __aeabi_ui2d
+00004860   _register_unlock
+0000486c   _register_lock
+00004878   _nop
+00004884   __TI_zero_init
+000048a4   esmGroup1Notification
+000048b4   esmGroup2Notification
+000048c4   __TI_decompress_none
+000048d8   __TI_decompress_rle24
+000048e0   phantomInterrupt
+00004b0c   flash_sector
+00004c4c   flash_bank
+00004c98   __TI_Handler_Table_Base
+00004ca4   __TI_Handler_Table_Limit
+00004cb0   __TI_CINIT_Base
+00004cc0   __TI_CINIT_Limit
+08002000   Fapi_serviceWatchdogTimer
+08002000   api_run
+08002008   Fapi_setupEepromSectorEnable
+08002034   Fapi_setupBankSectorEnable
+08002068   BLInternalFlashFirstSectorSizeGet
+08002090   BLInternalFlashSizeGet
+080020b8   BLInternalFlashStartAddrCheck
+08002194   Fapi_BlockErase
+08002480   Fapi_BlockProgram
+08002650   Fapi_UpdateStatusProgram
+08002714   Flash_Program_Check
+0800276c   Flash_Erase_Check
+080027b8   Fapi_BlockRead
+08002879   Fapi_initializeFlashBanks
+08002ad5   Fapi_setActiveFlashBank
+08002c4d   Fapi_issueProgrammingCommand
+08002dc1   _Fapi_enterMarginMode
+08002e3d   Fapi_enableMainBankSectors
+08002e89   Fapi_doMarginReadByByte
+08002ec9   _Fapi_issueFsmCommand
+08002f05   Fapi_issueAsyncCommandWithAddress
+08002f35   Fapi_waitDelay
+08002f65   _Fapi_exitMarginMode
+08002f95   Fapi_calculateFletcherChecksum
+08002fc1   Fapi_flushPipeline
+08003001   Fapi_calculateEcc
+08003015   _scaleEEFclk
+08003025   _scaleMainFclk
+08003035   _Fapi_checkWdService
+0800304c   tab_1024
+0800344c   g_pulUpdateSuccess
+0800346c   g_ulUpdateStatusAddr
+08003470   g_ulVectorTable
+08003474   g_ulUpdateBufferSize
+08003480   _lock
+08003484   _unlock
+08003488   __TI_cleanup_ptr
+0800348c   __TI_dtors_ptr
+08003490   FlashDestination
+08003498   file_name
+080034d8   g_sciTransfer
+080034fc   JumpAddress
+08003504   g_ulForced
+08003508   g_ulTransferAddress
+ffffffff   __binit__
+ffffffff   __c_args__
+ffffffff   binit
+UNDEFED    SHT$$INIT_ARRAY$$Base
+UNDEFED    SHT$$INIT_ARRAY$$Limit
+
+[143 symbols]
