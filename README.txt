@@ -1,0 +1,12 @@
+This contains the code that will be used to test the CAN bootloader.
+
+bootloader_test_base contains R4F blinky code with the bootloader and bootloader test files.
+todo: rename bootloader_test_base.
+
+bootloader_test_to_R4F contains R5F blinky code. It will be used to send data over the CAN bus to the R4F board.
+Steps:
+1 - Load the bootloader code onto the target device (R4F)
+2 - Connect the R5F board to the R4F via CAN
+3 - Send the data over the CAN interface from the R5F to the R4F. Will use blinky code for this (using a .bin?)
+4 - If all goes well, the bootloader should set up the blinky code on the R4F, and the R4F will have a blinking LED.
+
