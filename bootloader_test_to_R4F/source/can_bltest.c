@@ -69,7 +69,7 @@ NCTYPE_OBJH		RxHandle = 0;
 NCTYPE_OBJH		TxHandle = 0;
 
 /* NI-CAN handle */
-NCTYPE_OBJH	TxRx=0;     
+NCTYPE_OBJH	TxRx=0;
 
 
 /* This function converts the absolute time obtained from ncReadMult into a string. */
