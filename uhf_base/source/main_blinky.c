@@ -120,7 +120,6 @@ void main_blinky( void )
 	xQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( unsigned long ) );
 
 	// TEST for voltage reading
-	gioInit();
 	adf_reset();
 	adf_configure();
 	float volt = adf_readback_voltage();
