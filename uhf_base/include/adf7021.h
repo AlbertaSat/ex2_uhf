@@ -361,5 +361,6 @@ int adf_readback_temp(void);
 float adf_readback_voltage(void);
 void adf_configure(void);
 void adf_reset(void);
+uint8 bitFromPort(gioPORT_t *port, uint32 bit);
 
 #endif /* _ADF7021_H_ */

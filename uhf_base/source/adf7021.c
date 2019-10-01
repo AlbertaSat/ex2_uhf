@@ -28,7 +28,7 @@
 // Platform-specific GPIO
 #ifndef __AVR__	// For non-AVR MCUs...
 	// Assume TI...
-#	include "HL_gio.h"
+#	include "gio.h"
 
 #	define PINSET( PINNAME ) gioSetBit( gioPORTA, PINNAME, 1 )
 #	define PINCLEAR( PINNAME ) gioSetBit( gioPORTA, PINNAME, 0 )
@@ -687,4 +687,5 @@ uint8 bitFromPort(gioPORT_t *port, uint32 bit)
 {
     uint32 portRead = gioGetPort( port );
     uint8 val = (portRead >> bit) & 0x01;
+    return val;
 }

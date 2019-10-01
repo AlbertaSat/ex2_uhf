@@ -34,7 +34,7 @@
  *
  * NOTE 2:  This file only contains the source code that is specific to the
  * basic demo.  Generic functions, such FreeRTOS hook functions, and functions
- * required to configure the hardware, are defined in main.c.
+ * required to configure the hardware, are defined in` main.c.
  ******************************************************************************
  *
  * main_blinky() creates one queue, and two tasks.  It then starts the
@@ -70,6 +70,7 @@
 #include "os_task.h"
 #include "os_semphr.h"
 #include "gio.h"
+#include "adf7021.h"
 
 /* Common demo includes. */
 #include "partest.h"
@@ -117,6 +118,16 @@ void main_blinky( void )
 {
 	/* Create the queue. */
 	xQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( unsigned long ) );
+
+	// TEST for voltage reading
+	gioInit();
+	adf_reset();
+	adf_configure();
+	float volt = adf_readback_voltage();
+	fprintf(stderr, "readback voltage = %f", volt);
+	// TEST for voltage reading
+	int temp = adf_readback_temp();
+	fprintf(stderr, "temperature = %d", temp);
 
 	if( xQueue != NULL )
 	{
