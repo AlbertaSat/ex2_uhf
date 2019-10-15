@@ -257,28 +257,6 @@ void main(void)
 	// AttrIdList[7] =         NC_ATTR_CAN_MASK_XTD;
 	// AttrValueList[7] =      NC_CAN_MASK_XTD_DONTCARE;
 
-	// Status = ncConfig(Interface, 8, AttrIdList, AttrValueList);
-	// if (Status < 0) 
-	// {
-	//    PrintStat(Status, "ncConfig");
-	// }
-
-    // /* open the CAN Network Interface Object */
-	// Status = ncOpenObject(Interface, &TxHandle);
-	// if (Status < 0) 
-	// {
-	// 	PrintStat(Status, "ncOpenObject");
-	// }   
-	// /* open the CAN Network Interface Object */
-	// Status = ncOpenObject(Interface, &RxHandle);
-	// if (Status < 0) 
-	// {
-	// 	PrintStat(Status, "ncOpenObject");
-	// }   
-
-    // /* print out the instructions to the I/O window */
-	// printf("\n\ninitialized successfuly on CAN0 ... \n\n");
-
 	/* enable irq interrupt in */
     _enable_IRQ_interrupt_();
 
@@ -316,8 +294,14 @@ void main(void)
 	// is canIsRxMessageArrived the right method?
 	while(!canIsRxMessageArrived(canREG1,canMESSAGE_BOX1)){
 		canGetData(canREG1, canMESSAGE_BOX1, rx_data1);
-		canGetData(canREG2, canMESSAGE_BOX1, rx_data2);
+	}
+	while(!canIsRxMessageArrived(canREG2,canMESSAGE_BOX1)){
+		canGetData(canREG3, canMESSAGE_BOX1, rx_data2);
+	}
+	while(!canIsRxMessageArrived(canREG3,canMESSAGE_BOX1)){
 		canGetData(canREG3, canMESSAGE_BOX1, rx_data3);
+	}
+	while(!canIsRxMessageArrived(canREG4,canMESSAGE_BOX1)){
 		canGetData(canREG4, canMESSAGE_BOX1, rx_data4);
 	}
 
@@ -351,38 +335,80 @@ void main(void)
 	Get_BinaryData( filename );
 	ulAddress = 0x00020000;
 
-	Transmit.DataLength = 8;
-	Transmit.IsRemote = 0;
-	Transmit.ArbitrationId = CAN_COMMAND_DOWNLOAD;	
+	// Leftover from NICAN stuff
+	// Transmit.DataLength = 8;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_DOWNLOAD;	
+	// Transmit.Data[0] = (ulAddress >> 24) & 0xff;
+	// Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
+	// Transmit.Data[2] = (ulAddress >> 8) & 0xff;
+	// Transmit.Data[3] = ulAddress & 0xff;
+	// Transmit.Data[4] = (image_size >> 24) & 0xff;
+	// Transmit.Data[5] = (image_size >> 16) & 0xff;
+	// Transmit.Data[6] = (image_size >> 8) & 0xff;
+	// Transmit.Data[7] = image_size & 0xff;
 
-	Transmit.Data[0] = (ulAddress >> 24) & 0xff;
-	Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
-	Transmit.Data[2] = (ulAddress >> 8) & 0xff;
-	Transmit.Data[3] = ulAddress & 0xff;
-	Transmit.Data[4] = (image_size >> 24) & 0xff;
-	Transmit.Data[5] = (image_size >> 16) & 0xff;
-	Transmit.Data[6] = (image_size >> 8) & 0xff;
-	Transmit.Data[7] = image_size & 0xff;
+	uint8 transmit_data[D_COUNT];
+	transmit_data[0] = (ulAddress >> 24) & 0xff;
+	transmit_data[1] = (ulAddress >> 16) & 0Xff;
+	transmit_data[2] = (ulAddress >> 8) & 0xff;
+	transmit_data[3] = ulAddress & 0xff;
+	// transmit_data[4] = (image_size >> 24) & 0xff;
+	// transmit_data[5] = (image_size >> 16) & 0xff;
+	// transmit_data[6] = (image_size >> 8) & 0xff;
+	// transmit_data[7] = image_size & 0xff;
 
-	Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);
-	Status = 	
-	if (Status < 0) 
-	{
-		PrintStat(Status, "ncWrite");
+	status1 = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &transmit_data[0]);
+	status2 = canTransmit(canREG2, canMESSAGE_BOX1, (const uint8 *) &transmit_data[1]);
+	status3 = canTransmit(canREG3, canMESSAGE_BOX1, (const uint8 *) &transmit_data[2]);
+	status4 = canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &transmit_data[3]);
+
+	if (status1 + status2 + status3 + status4 != 4) {
+		fprintf(stderr, "TX message box setup unsuccessful.");
+		fprintf(stderr, "status1 value: %i", status1);
+		fprintf(stderr, "status2 value: %i", status2);
+		fprintf(stderr, "status3 value: %i", status3);
+		fprintf(stderr, "status4 value: %i", status4);
 	}
 
-	Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
-	if (Status < 0)
-	{
-			PrintStat(Status, "ncReadMult");
+	rx_data1 = {0};
+	rx_data2 = {0};
+	rx_data3 = {0};
+	rx_data4 = {0};
+
+	while(!canIsRxMessageArrived(canREG1,canMESSAGE_BOX1)){
+		canGetData(canREG1, canMESSAGE_BOX1, rx_data1);
 	}
-	rcvID = ReceiveBuf[0].ArbitrationId;
-	rcvData = ReceiveBuf[0].Data[0];
-    rcvDataLen = ReceiveBuf[0].DataLength;
-	if((rcvID != 0x05a6) && (rcvData != 0))
-	{
-		printf(" - COMMAND_DOWNLOAD failed!\n");
-		return 0;
+	while(!canIsRxMessageArrived(canREG2,canMESSAGE_BOX1)){
+		canGetData(canREG3, canMESSAGE_BOX1, rx_data2);
+	}
+	while(!canIsRxMessageArrived(canREG3,canMESSAGE_BOX1)){
+		canGetData(canREG3, canMESSAGE_BOX1, rx_data3);
+	}
+	while(!canIsRxMessageArrived(canREG4,canMESSAGE_BOX1)){
+		canGetData(canREG4, canMESSAGE_BOX1, rx_data4);
+	}
+
+	// likely not applicable here because it isn't a loopback
+	// todo: find a way to test that the code is received on the other board
+	for(int i = 0; i < 8; i++){
+		if(tx_data1[i] != rx_data1[i]){
+			fprintf(stderr, "can 1, index = %d error\n", i);
+			fprintf(stderr, "tx = %d, rx = %d\n", tx_data1[i], rx_data1[i]);
+		}
+		else if(tx_data2[i] != rx_data2[i]){
+			fprintf(stderr,"can 2, index = %d error\n", i);
+		}
+		else if(tx_data3[i] != rx_data3[i]){
+			fprintf(stderr,"can 3, index = %d error\n", i);
+		}
+		else if(tx_data4[i] != rx_data4[i]){
+			fprintf(stderr,"can 4, index = %d error\n", i);
+		}
+
+		else if(i == 7){
+			fprintf(stderr,"Checking tx and rx complete");
+		}
 	}
 
 	return(0); // end
@@ -425,41 +451,41 @@ void main(void)
     /*==============================================================================
     * COMMAND Download
     *===============================================================================*/
-    Get_BinaryData( filename );
-	ulAddress = 0x00020000;
+    // Get_BinaryData( filename );
+	// ulAddress = 0x00020000;
 
-	Transmit.DataLength = 8;
-	Transmit.IsRemote = 0;
-	Transmit.ArbitrationId = CAN_COMMAND_DOWNLOAD;	
+	// Transmit.DataLength = 8;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_DOWNLOAD;	
 
-	Transmit.Data[0] = (ulAddress >> 24) & 0xff;
-	Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
-	Transmit.Data[2] = (ulAddress >> 8) & 0xff;
-	Transmit.Data[3] = ulAddress & 0xff;
-	Transmit.Data[4] = (image_size >> 24) & 0xff;
-	Transmit.Data[5] = (image_size >> 16) & 0xff;
-	Transmit.Data[6] = (image_size >> 8) & 0xff;
-	Transmit.Data[7] = image_size & 0xff;
+	// Transmit.Data[0] = (ulAddress >> 24) & 0xff;
+	// Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
+	// Transmit.Data[2] = (ulAddress >> 8) & 0xff;
+	// Transmit.Data[3] = ulAddress & 0xff;
+	// Transmit.Data[4] = (image_size >> 24) & 0xff;
+	// Transmit.Data[5] = (image_size >> 16) & 0xff;
+	// Transmit.Data[6] = (image_size >> 8) & 0xff;
+	// Transmit.Data[7] = image_size & 0xff;
 
-	Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);	
-	if (Status < 0) 
-	{
-		PrintStat(Status, "ncWrite");
-	}
+	// Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);	
+	// if (Status < 0) 
+	// {
+	// 	PrintStat(Status, "ncWrite");
+	// }
 
-	Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
-	if (Status < 0)
-	{
-			PrintStat(Status, "ncReadMult");
-	}
-	rcvID = ReceiveBuf[0].ArbitrationId;
-	rcvData = ReceiveBuf[0].Data[0];
-    rcvDataLen = ReceiveBuf[0].DataLength;
-	if((rcvID != 0x05a6) && (rcvData != 0))
-	{
-		printf(" - COMMAND_DOWNLOAD failed!\n");
-		return 0;
-	}
+	// Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+	// if (Status < 0)
+	// {
+	// 		PrintStat(Status, "ncReadMult");
+	// }
+	// rcvID = ReceiveBuf[0].ArbitrationId;
+	// rcvData = ReceiveBuf[0].Data[0];
+    // rcvDataLen = ReceiveBuf[0].DataLength;
+	// if((rcvID != 0x05a6) && (rcvData != 0))
+	// {
+	// 	printf(" - COMMAND_DOWNLOAD failed!\n");
+	// 	return 0;
+	// }
 
     /*==============================================================================
     * COMMAND Sent Data
@@ -549,7 +575,7 @@ void main(void)
     *===============================================================================*/
 	ulAddress = 0x00020000;
 
-	// todo: create the Transmit object?
+	
 	Transmit.DataLength = 4;
 	Transmit.IsRemote = 0;
 	Transmit.ArbitrationId = CAN_COMMAND_RUN;	
