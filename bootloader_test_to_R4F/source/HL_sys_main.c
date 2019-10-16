@@ -271,6 +271,7 @@ void main(void)
 	/*==============================================================================
     * Basic Test
     *===============================================================================*/
+   /*
     int status1;
 	int status2;
 	int status3;
@@ -328,12 +329,70 @@ void main(void)
 			fprintf(stderr,"Checking tx and rx complete");
 		}
 	}
+*/
+	/*==============================================================================
+    * COMMAND PING
+	* 
+	This command is used to receive an acknowledge command from the bootloader indicating that
+	communication has been established. This command has no data. If the device is present, 
+	it will respond with a CAN_COMMAND_PING back to the CAN update application.
+    *===============================================================================*/
+
+	// Transmit.DataLength = 0;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_PING;
+
+	uint8 ping_tx_data[D_COUNT][8] = {0};
+	uint8 *ping_tx_ptr = &ping_tx_data[0][0];	
+	uint32 ping_arbitrationId = CAN_COMMAND_PING;
+	uint8 rx_data1[D_COUNT] = {0};
+
+	canUpdateID(canREG1, canMESSAGE_BOX1, ping_arbitrationId);					
+	int status = canTransmit(canREG1, canMESSAGE_BOX1, ping_tx_ptr);	
+
+	if (status1 != 1) {
+		fprintf(stderr, "TX message box setup unsuccessful.");
+		fprintf(stderr, "status1 value: %i", status1);
+	}
+
+	fprintf(stderr, "Transmitted. Receiving..");
+
+	while(!canIsRxMessageArrived(canREG1, canMESSAGE_BOX1)){
+		canGetData(canREG1, canMESSAGE_BOX1, ping_rx_data1);
+	}
+
+	// Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+
+	for(int i = 0; i < 8; i++){
+		fprintf(stderr, "rx = %d\n", ping_rx_data1[i]);
+	}
+
+	// rcvID = ReceiveBuf[0].ArbitrationId;
+	// rcvData = ReceiveBuf[0].Data[0];
+    // rcvDataLen = ReceiveBuf[0].DataLength;
+	// if((rcvID != 0x05a6) && (rcvData != 0))
+	// {
+	// 	printf(" - COMMAND_PING failed!\n");
+	// 	return 0;
+	// }
 
 	/*==============================================================================
     * COMMAND Download
+	* 
+	This command sets the base address for the download as well as the size of the data to write 
+	to the device. This command should be followed by a series of CAN_COMMAND_SEND_DATA that send
+	the actual image to be programmed to the device. The command consists of two 32-bit values. The
+	first 32-bit value is the address to start programming data into, while the second is the 
+	32-bit size of the data that will be sent.
+
+	This command also triggers an erasure of the full application area in the Flash. This Flash 
+	erase operation causes the command to take longer to send the CAN_COMMAND_ACK in response 
+	to the command, which should be taken into account by the CAN update application.
     *===============================================================================*/
 	Get_BinaryData( filename );
 	ulAddress = 0x00020000;
+
+	// todo: create an ID
 
 	// Leftover from NICAN stuff
 	// Transmit.DataLength = 8;
@@ -411,14 +470,69 @@ void main(void)
 		}
 	}
 
-	return(0); // end
+	/*==============================================================================
+    * COMMAND Sent Data
+	* 
+	This command should only follow a CAN_COMMAND_DOWNLOAD command or another
+	CAN_COMMAND_SEND_DATA command when more data is needed. Consecutive send data commands 
+	automatically increment the address and continue programming from the previous location. 
+
+	The transfer size is limited to 8 bytes at a time based on the maximum size
+	of an individual CAN transmission. The command terminates programming once the number 
+	of bytes indicated by the CAN_COMMAND_DOWNLOAD command have been received.
+
+	The CAN bootloader sends a CAN_COMMAND_ACK in response to each send data command to
+	allow the CAN update application to throttle the data going to the device and not 
+	overrun the bootloader with data.
+
+	This command also triggers the programming of the application area into the Flash. 
+	This Flash programming operation causes the command to take longer to send the 
+	CAN_COMMAND_ACK in response to the command, which should be taken into account by 
+	the CAN update application.
+
+	The LED D7 is flashing until the application update is complete.
+    *===============================================================================*/
+
+   // ...
+
+   /*==============================================================================
+    * COMMAND RUN
+	* 
+	This command is used to tell the CAN boot loader to run the application located at
+	APP_START_ADDRESS. This is used after downloading a new image to the microcontroller 
+	to cause the new application to start from a software reset. The normal boot sequence 
+	occurs and the image runs as if from a hardware reset
+    *===============================================================================*/
+
+   // ...
+
+   /*==============================================================================
+    * COMMAND RESET
+	* 
+	This command is used to tell the CAN bootloader to reset the microcontroller. This 
+	is used after downloading a new image to the microcontroller to cause the new 
+	application or the new bootloader to start from a reset. The normal boot sequence 
+	occurs and the image runs as if from a hardware reset. It can also be used to reset 
+	the bootloader if a critical error occurs and the CAN update application needs to 
+	restart communication with the bootloader.
+    *===============================================================================*/
+
+   // ...
+
+   // todo: try out CAN_COMMAND_REQUEST stuff
+
+	return(0);
     
+
+
 	//==============================================================================
 	//==============================================================================
 	// Below is the original test code meant to use the NICAN device
 	// It's been left below for reference
 	//==============================================================================
 	//==============================================================================
+
+
 
     /*==============================================================================
     * COMMAND PING

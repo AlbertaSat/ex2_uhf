@@ -9,4 +9,5 @@ Steps:
 2 - Connect the R5F board to the R4F via CAN
 3 - Send the data over the CAN interface from the R5F to the R4F. Will use blinky code for this (using a .bin?)
 4 - If all goes well, the bootloader should set up the blinky code on the R4F, and the R4F will have a blinking LED.
+    - will need help loading bootloader code onto the R4F
 
