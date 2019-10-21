@@ -407,20 +407,20 @@ void main(void)
 	// Transmit.Data[6] = (image_size >> 8) & 0xff;
 	// Transmit.Data[7] = image_size & 0xff;
 
-	uint8 transmit_data[D_COUNT];
+	unsigned char transmit_data[8];
 	transmit_data[0] = (ulAddress >> 24) & 0xff;
 	transmit_data[1] = (ulAddress >> 16) & 0Xff;
 	transmit_data[2] = (ulAddress >> 8) & 0xff;
 	transmit_data[3] = ulAddress & 0xff;
-	// transmit_data[4] = (image_size >> 24) & 0xff;
-	// transmit_data[5] = (image_size >> 16) & 0xff;
-	// transmit_data[6] = (image_size >> 8) & 0xff;
-	// transmit_data[7] = image_size & 0xff;
+	transmit_data[4] = (image_size >> 24) & 0xff;
+	transmit_data[5] = (image_size >> 16) & 0xff;
+	transmit_data[6] = (image_size >> 8) & 0xff;
+	transmit_data[7] = image_size & 0xff;
 
-	status1 = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &transmit_data[0]);
-	status2 = canTransmit(canREG2, canMESSAGE_BOX1, (const uint8 *) &transmit_data[1]);
-	status3 = canTransmit(canREG3, canMESSAGE_BOX1, (const uint8 *) &transmit_data[2]);
-	status4 = canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &transmit_data[3]);
+	status1 = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[0]);
+	status2 = canTransmit(canREG2, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[1]);
+	status3 = canTransmit(canREG3, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[2]);
+	status4 = canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[3]);
 
 	if (status1 + status2 + status3 + status4 != 4) {
 		fprintf(stderr, "TX message box setup unsuccessful.");
@@ -522,15 +522,16 @@ void main(void)
    // todo: try out CAN_COMMAND_REQUEST stuff
 
 	return(0);
-    
 
 
-	//==============================================================================
-	//==============================================================================
+	//===========================================================================================================
+	//===========================================================================================================
 	// Below is the original test code meant to use the NICAN device
 	// It's been left below for reference
-	//==============================================================================
-	//==============================================================================
+	//===========================================================================================================
+	//===========================================================================================================
+
+
 
 
 
