@@ -165,7 +165,6 @@ uint8 adf_test()
     //PINCLEAR(SDATA);
     //PINSET(SDATA);
     return PINREAD(SDATA);
-    //return 1;
 }
 
 void adf_write_reg(adf_reg_t *reg)
