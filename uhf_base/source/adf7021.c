@@ -33,6 +33,7 @@
 #	define PINSET( PINNAME ) gioSetBit( gioPORTA, PINNAME, 1 )
 #	define PINCLEAR( PINNAME ) gioSetBit( gioPORTA, PINNAME, 0 )
 #	define PINREAD( PINNAME )  bitFromPort( gioPORTA, PINNAME )
+#   define PINTOGGLE( PINNAME ) gioToggleBit( gioPORTA, PINNAME )
 
 // A quick EFM32 alternative for missing function
 void delay_ms(int nDelay) {
@@ -158,7 +159,14 @@ enum {
 	ADF_PA_ON
 } adf_pa_state;
 
-
+uint8 adf_test()
+{
+    PINTOGGLE(SDATA);
+    //PINCLEAR(SDATA);
+    //PINSET(SDATA);
+    return PINREAD(SDATA);
+    //return 1;
+}
 
 void adf_write_reg(adf_reg_t *reg)
 {
@@ -683,6 +691,7 @@ void adf_reset(void)
 	adf_configure();
 }
 
+// Returns the desired bit from a given port
 uint8 bitFromPort(gioPORT_t *port, uint32 bit)
 {
     uint32 portRead = gioGetPort( port );

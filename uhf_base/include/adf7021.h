@@ -26,7 +26,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
+#include "spi.h"
 #include "hwconfig.h"
 
 
@@ -44,14 +44,18 @@
 
 // ************************************************************************
 // Pin configurations for different hardware implementations:
+// ADF7021
+#define TxRxCLK     spiPinSelect[SPI_PIN_SOMI_3]
+#define TxRxDATA    spiPinSelect[SPI_PIN_SIMO_3]
+#define CLKOUT      spiPinSelect[SPI_PIN_CLK]
 
-#define SWD     6
+#define SWD         6
+#define SCLK        0
+#define SREAD       5
+#define SDATA       1
+#define SLE         2
+#define CE          7
 
-#define SCLK    0
-#define SREAD   5
-#define SDATA   1
-#define SLE     2
-#define CE      7
 #ifdef EX2_DEVBOARD
 // Ex2 Pearl prototype.
 
@@ -94,14 +98,6 @@ MUX?       | o  o |    CE
 #define ADF_PORTPIN_MUXOUT	giopPortD, 12
 #define ADF_PORTPIN_CE		gioPortA, 7
 */
-#define SWD     6
-
-#define SCLK    0
-#define SREAD   5
-#define SDATA   1
-#define SLE     2
-#define CE      7
-
 #endif
 
 /*
@@ -312,6 +308,7 @@ typedef struct {
 	};
 } adf_sysconf_t;
 
+uint8 adf_test(void);
 
 void adf_write_reg(adf_reg_t *reg);
 adf_reg_t adf_read_reg(unsigned int readback_config);

@@ -24,7 +24,7 @@
  *
  * 1 tab == 4 spaces!
  */
-
+#define mainCREATE_SIMPLE_BLINKY_DEMO_ONLY
 /******************************************************************************
  * NOTE 1:  This project provides two demo applications.  A simple blinky style
  * project, and a more comprehensive test and demo application.  The
@@ -71,6 +71,7 @@
 #include "os_semphr.h"
 #include "gio.h"
 #include "adf7021.h"
+#include "spi.h"
 
 /* Common demo includes. */
 #include "partest.h"
@@ -81,7 +82,7 @@
 
 /* The rate at which data is sent to the queue.  The 200ms value is converted
 to ticks using the portTICK_PERIOD_MS constant. */
-#define mainQUEUE_SEND_FREQUENCY_MS			( 200 / portTICK_PERIOD_MS )
+#define mainQUEUE_SEND_FREQUENCY_MS			( 1000 / portTICK_PERIOD_MS )
 
 /* The number of items the queue can hold.  This is 1 as the receive task
 will remove items as they are added, meaning the send task should always find
@@ -118,15 +119,6 @@ void main_blinky( void )
 {
 	/* Create the queue. */
 	xQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( unsigned long ) );
-
-	// TEST for voltage reading
-	adf_reset();
-	adf_configure();
-	float volt = adf_readback_voltage();
-	fprintf(stderr, "readback voltage = %f", volt);
-	// TEST for voltage reading
-	int temp = adf_readback_temp();
-	fprintf(stderr, "temperature = %d", temp);
 
 	if( xQueue != NULL )
 	{
@@ -195,18 +187,25 @@ unsigned long ulReceivedValue;
 		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
 		FreeRTOSConfig.h. */
 
-//	    gioSetBit(gioPORTB,1,1);
-
 		xQueueReceive( xQueue, &ulReceivedValue, portMAX_DELAY );
 
 
 		/*  To get here something must have been received from the queue, but
 		is it the expected value?  If it is, toggle the LED. */
+
 		if( ulReceivedValue == 100UL )
 		{
-	        gioToggleBit(gioPORTB,1);
-//			vParTestToggleLED( 0 );
-//			ulReceivedValue = 0U;
+		    // Test to check whether PINCLEAR, PINSET, and PINREAD work (without an oscilloscope)
+		    // Only blinks if correct value is read
+		    uint8 testVal = adf_test();
+		    if (testVal == 1)
+		    {
+		        gioToggleBit(gioPORTB,1);
+		        vParTestToggleLED( 0 );
+		        // ADDED IN FOR TESTING PURPOSES
+		        //adf_test();
+		        //ulReceivedValue = 0U;
+		    }
 		}
 	}
 }

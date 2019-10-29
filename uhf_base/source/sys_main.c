@@ -67,7 +67,8 @@
 extern void main_blinky( void );
 /* USER CODE END */
 
-int main(void) {
+int main(void)
+{
 /* USER CODE BEGIN (3) */
     gioInit();
     gioSetDirection(gioPORTB, 0xFFFFFFFF);
