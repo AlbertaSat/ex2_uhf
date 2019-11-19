@@ -198,6 +198,12 @@ unsigned long ulReceivedValue;
 		    // Test to check whether PINCLEAR, PINSET, and PINREAD work (without an oscilloscope)
 		    // Only blinks if correct value is read
 		    uint8 testVal = adf_test();
+		    fprintf(stderr, "check");
+		    // We are using PGE version of TMS570LS1224 so max system clock frequency with pipeline
+		    // mode disabled is 50 MHz
+		    unsigned long mcu_xtal = 50000000; //TODO: define this
+		    adf_set_power_on(mcu_xtal);
+		    fprintf(stderr, "power on successful");
 		    if (testVal == 1)
 		    {
 		        gioToggleBit(gioPORTB,1);
