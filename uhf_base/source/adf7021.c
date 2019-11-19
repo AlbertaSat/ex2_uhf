@@ -210,7 +210,7 @@ adf_reg_t adf_read_reg(unsigned int readback_config)
 	register_value.whole_reg = ((readback_config & 0x1F) << 4);
 
 	/* Address the readback setup register */
-	register_value.whole_reg |= 7; 
+	register_value.whole_reg |= 7;
 	adf_write_reg(&register_value);
 	register_value.whole_reg = 0;
 
@@ -299,14 +299,14 @@ void adf_set_power_on(unsigned long adf_xtal)
 	//ADF7021.h:#define ADF7021_REG1_UHF1        0x00575021
 	//ADF7021.h:#define ADF7021_REG1_UHF2        0x00535021
 
-	// write R15, set CLK_MUX to enable SPI
+	// write R15, set CLK_MUX to enable SPI (UART_MODE of R0 is enabled in adf_init_rx_mode(...)
+	// and adf_init_tx_mode(...))
 	sys_conf.r15.address_bits 	= 15;
 	sys_conf.r15.rx_test_mode  	= 0;
 	sys_conf.r15.tx_test_mode 	= 0;
 	sys_conf.r15.sd_test_mode 	= 0;
 	sys_conf.r15.cp_test_mode 	= 0;
 	sys_conf.r15.clk_mux 		= 7;
-	//sys_conf.r15.clk_mux 		= 0; // xxx SPI not set up yet
 
 	sys_conf.r15.pll_test_mode 	= 0;
 	sys_conf.r15.analog_test_mode 	= 0;
