@@ -46,6 +46,10 @@
 #include "gio.h"
 #include "het.h"
 #include "FreeRTOS.h"
+#include "adf7021.h"
+#include "spi.h"
+#include "stdio.h"
+#include "stdlib.h"
 /* USER CODE END */
 
 /* Include Files */
@@ -53,6 +57,8 @@
 #include "sys_common.h"
 
 /* USER CODE BEGIN (1) */
+#   define PINSET( PINNAME ) gioSetBit( gioPORTA, PINNAME, 1 )
+#   define PINCLEAR( PINNAME ) gioSetBit( gioPORTA, PINNAME, 0 )
 /* USER CODE END */
 
 /** @fn void main(void)
@@ -64,29 +70,42 @@
 */
 
 /* USER CODE BEGIN (2) */
-extern void main_blinky( void );
+
 /* USER CODE END */
 
 int main(void)
 {
 /* USER CODE BEGIN (3) */
     gioInit();
+    spiInit();
     gioSetDirection(gioPORTB, 0xFFFFFFFF);
-    main_blinky();
 
-    /*
-    int temp, delay;
-    delay = 0x200000;
-    gioInit();
-    gioSetDirection(gioPORTB, 0xFFFFFFFF);
-    while (1) {
-        gioToggleBit(gioPORTB, 1);
-        for (temp = 0; temp < delay; temp++);
-        gioToggleBit(gioPORTB, 1);
-        for (temp = 0; temp < delay; temp++);
+    spiDAT1_t dataconfig1_t;
 
-    }
-    */
+    dataconfig1_t.CS_HOLD = FALSE;
+    dataconfig1_t.WDEL    = FALSE;
+    dataconfig1_t.DFSEL   = SPI_FMT_0;
+    dataconfig1_t.CSNR    = 0x00;
+
+
+    uint16 data = 0b1010101010101010;
+
+
+    unsigned long mcu_xtal = 50000000; //TODO: define this
+
+    adf_set_power_on(mcu_xtal);
+    //fprintf(stderr, "power on successful");
+
+    adf_configure();
+    //fprintf(stderr, "configuration successful");
+
+    adf_set_tx_mode();
+    //fprintf(stderr, "tx mode on");
+
+    spiSendData(spiREG3, &dataconfig1_t, 1, &data);
+    spiTransmitData(spiREG3, &dataconfig1_t, 1, &data);
+
+
 /* USER CODE END */
 
     return 0;

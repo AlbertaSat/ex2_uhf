@@ -66,20 +66,20 @@ static uint32_t adf_current_syncword;
 
 
 /* Default settings */
-#define FREQUENCY		437450000
+#define FREQUENCY		436500000
 #define TX_WAIT_TIMEOUT		120U
 #define TX_TIMEOUT_DELAY	10U
 #define RX_WAIT_TIMEOUT		120U
 #define CSMA_RSSI		-50
-#define BAUD_RATE		2400
-#define MOD_INDEX		8
-#define PA_SETTING		1	// Was 8. 0 is off for testing...
+#define BAUD_RATE		9600
+#define MOD_INDEX		0.5
+#define PA_SETTING		0	// Was 8. 0 is off for testing...
 #define AFC_RANGE		10
 #define AFC_KI			11
 #define AFC_KP			4
-#define AFC_ENABLE		1
+#define AFC_ENABLE		0
 #define IF_FILTER_BW		2
-#define SYNC_WORD		0x4f5a33	// xxx
+#define SYNC_WORD		0x555555	// 0b10101010101010101010101
 #define SYNC_WORD_TOLERANCE	ADF_SYNC_WORD_ERROR_TOLERANCE_3
 #define SYNC_WORD_BITS		ADF_SYNC_WORD_LEN_24
 #define TRAINING_SYMBOL		0x55
@@ -560,25 +560,24 @@ void adf_set_rx_mode(void)
 		adf_write_reg(&rx_conf.r4_reg);
 	}
 
-	BLUEBOX_UNUSED( led_off(LED_TRANSMIT) );
-	BLUEBOX_UNUSED( ptt_low(conf.ptt_delay_low) );
+	//BLUEBOX_UNUSED( led_off(LED_TRANSMIT) );
+	//BLUEBOX_UNUSED( ptt_low(conf.ptt_delay_low) );
 
 	adf_state = ADF_RX;
 }
 
 void adf_set_tx_mode(void)
 {
-	/* Turn on PA the first time we transmit */
+	/* Turn on PA the first time we transmit
 	//xxx if (adf_pa_state == ADF_PA_OFF) {
 	{
 		adf_write_reg(&tx_conf.r2_reg);
 		adf_pa_state = ADF_PA_ON;
-	}
+	}*/
 
-	BLUEBOX_UNUSED( ptt_high(conf.ptt_delay_high) );
-	BLUEBOX_UNUSED( led_on(LED_TRANSMIT) );
+	//BLUEBOX_UNUSED( ptt_high(conf.ptt_delay_high) );
+	//BLUEBOX_UNUSED( led_on(LED_TRANSMIT) );
 
-	// xxx
 	if (0 && adf_state == ADF_RX) {
 		if (rx_conf.r3_reg.whole_reg != tx_conf.r3_reg.whole_reg)
 			adf_write_reg(&tx_conf.r3_reg);

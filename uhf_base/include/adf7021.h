@@ -298,7 +298,7 @@ typedef struct {
 			unsigned char tx_test_mode : 3;
 			unsigned char sd_test_mode : 3;
 			unsigned int  cp_test_mode : 3;				// spans word boundary
-			unsigned char clk_mux : 3;
+			unsigned char clk_mux : 7;
 			unsigned char pll_test_mode : 4;
 			unsigned char analog_test_mode : 4;
 			unsigned char force_ld_high : 1;

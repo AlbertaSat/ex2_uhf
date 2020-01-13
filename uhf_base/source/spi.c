@@ -77,6 +77,173 @@ void spiInit(void)
 
 
 
+    /** @b initialize @b SPI3 */
+
+    /** bring SPI out of reset */
+    spiREG3->GCR0 = 0U;
+    spiREG3->GCR0 = 1U;
+
+    /** SPI3 master mode and clock configuration */
+    spiREG3->GCR1 = (spiREG3->GCR1 & 0xFFFFFFFCU) | ((uint32)((uint32)0U << 1U)  /* CLOKMOD */
+                  | 0U);  /* MASTER */
+
+    /** SPI3 enable pin configuration */
+    spiREG3->INT0 = (spiREG3->INT0 & 0xFEFFFFFFU) | (uint32)((uint32)1U << 24U);  /* ENABLE HIGHZ */
+
+    /** - Delays */
+    spiREG3->DELAY = (uint32)((uint32)0U << 24U)  /* C2TDELAY */
+                   | (uint32)((uint32)0U << 16U)  /* T2CDELAY */
+                   | (uint32)((uint32)0U << 8U)   /* T2EDELAY */
+                   | (uint32)((uint32)0U << 0U);  /* C2EDELAY */
+
+    /** - Data Format 0 */
+    spiREG3->FMT0 = (uint32)((uint32)0U << 24U)  /* wdelay */
+                  | (uint32)((uint32)0U << 23U)  /* parity Polarity */
+                  | (uint32)((uint32)0U << 22U)  /* parity enable */
+                  | (uint32)((uint32)0U << 21U)  /* wait on enable */
+                  | (uint32)((uint32)0U << 20U)  /* shift direction */
+                  | (uint32)((uint32)0U << 17U)  /* clock polarity */
+                  | (uint32)((uint32)0U << 16U)  /* clock phase */
+                  | (uint32)((uint32)31U << 8U) /* baudrate prescale */
+                  | (uint32)((uint32)16U << 0U);  /* data word length */
+
+    /** - Data Format 1 */
+    spiREG3->FMT1 = (uint32)((uint32)0U << 24U)  /* wdelay */
+                  | (uint32)((uint32)0U << 23U)  /* parity Polarity */
+                  | (uint32)((uint32)0U << 22U)  /* parity enable */
+                  | (uint32)((uint32)0U << 21U)  /* wait on enable */
+                  | (uint32)((uint32)0U << 20U)  /* shift direction */
+                  | (uint32)((uint32)0U << 17U)  /* clock polarity */
+                  | (uint32)((uint32)0U << 16U)  /* clock phase */
+                  | (uint32)((uint32)79U << 8U) /* baudrate prescale */
+                  | (uint32)((uint32)16U << 0U);  /* data word length */
+
+    /** - Data Format 2 */
+    spiREG3->FMT2 = (uint32)((uint32)0U << 24U)  /* wdelay */
+                  | (uint32)((uint32)0U << 23U)  /* parity Polarity */
+                  | (uint32)((uint32)0U << 22U)  /* parity enable */
+                  | (uint32)((uint32)0U << 21U)  /* wait on enable */
+                  | (uint32)((uint32)0U << 20U)  /* shift direction */
+                  | (uint32)((uint32)0U << 17U)  /* clock polarity */
+                  | (uint32)((uint32)0U << 16U)  /* clock phase */
+                  | (uint32)((uint32)79U << 8U) /* baudrate prescale */
+                  | (uint32)((uint32)16U << 0U);  /* data word length */
+
+    /** - Data Format 3 */
+    spiREG3->FMT3 = (uint32)((uint32)0U << 24U)  /* wdelay */
+                  | (uint32)((uint32)0U << 23U)  /* parity Polarity */
+                  | (uint32)((uint32)0U << 22U)  /* parity enable */
+                  | (uint32)((uint32)0U << 21U)  /* wait on enable */
+                  | (uint32)((uint32)0U << 20U)  /* shift direction */
+                  | (uint32)((uint32)0U << 17U)  /* clock polarity */
+                  | (uint32)((uint32)0U << 16U)  /* clock phase */
+                  | (uint32)((uint32)79U << 8U) /* baudrate prescale */
+                  | (uint32)((uint32)16U << 0U);  /* data word length */
+
+    /** - set interrupt levels */
+    spiREG3->LVL = (uint32)((uint32)0U << 9U)  /* TXINT */
+                 | (uint32)((uint32)0U << 8U)  /* RXINT */
+                 | (uint32)((uint32)0U << 6U)  /* OVRNINT */
+                 | (uint32)((uint32)0U << 4U)  /* BITERR */
+                 | (uint32)((uint32)0U << 3U)  /* DESYNC */
+                 | (uint32)((uint32)0U << 2U)  /* PARERR */
+                 | (uint32)((uint32)0U << 1U) /* TIMEOUT */
+                 | (uint32)((uint32)0U << 0U);  /* DLENERR */
+
+    /** - clear any pending interrupts */
+    spiREG3->FLG |= 0xFFFFU;
+
+    /** - enable interrupts */
+    spiREG3->INT0 = (spiREG3->INT0 & 0xFFFF0000U)
+                  | (uint32)((uint32)0U << 9U)  /* TXINT */
+                  | (uint32)((uint32)0U << 8U)  /* RXINT */
+                  | (uint32)((uint32)0U << 6U)  /* OVRNINT */
+                  | (uint32)((uint32)0U << 4U)  /* BITERR */
+                  | (uint32)((uint32)0U << 3U)  /* DESYNC */
+                  | (uint32)((uint32)0U << 2U)  /* PARERR */
+                  | (uint32)((uint32)0U << 1U) /* TIMEOUT */
+                  | (uint32)((uint32)0U << 0U);  /* DLENERR */
+
+    /** @b initialize @b SPI3 @b Port */
+
+    /** - SPI3 Port output values */
+    spiREG3->PC3 =    (uint32)((uint32)1U << 0U)  /* SCS[0] */
+                    | (uint32)((uint32)1U << 1U)  /* SCS[1] */
+                    | (uint32)((uint32)1U << 2U)  /* SCS[2] */
+                    | (uint32)((uint32)1U << 3U)  /* SCS[3] */
+                    | (uint32)((uint32)1U << 4U)  /* SCS[4] */
+                    | (uint32)((uint32)1U << 5U)  /* SCS[5] */
+                    | (uint32)((uint32)0U << 8U)  /* ENA */
+                    | (uint32)((uint32)0U << 9U)  /* CLK */
+                    | (uint32)((uint32)0U << 10U)  /* SIMO */
+                    | (uint32)((uint32)0U << 11U); /* SOMI */
+
+    /** - SPI3 Port direction */
+    spiREG3->PC1  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */
+                    | (uint32)((uint32)1U << 1U)  /* SCS[1] */
+                    | (uint32)((uint32)1U << 2U)  /* SCS[2] */
+                    | (uint32)((uint32)1U << 3U)  /* SCS[3] */
+                    | (uint32)((uint32)1U << 4U)  /* SCS[4] */
+                    | (uint32)((uint32)1U << 5U)  /* SCS[5] */
+                    | (uint32)((uint32)0U << 8U)  /* ENA */
+                    | (uint32)((uint32)0U << 9U)  /* CLK */
+                    | (uint32)((uint32)0U << 10U)  /* SIMO */
+                    | (uint32)((uint32)1U << 11U); /* SOMI */
+
+    /** - SPI3 Port open drain enable */
+    spiREG3->PC6  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */
+                    | (uint32)((uint32)0U << 1U)  /* SCS[1] */
+                    | (uint32)((uint32)0U << 2U)  /* SCS[2] */
+                    | (uint32)((uint32)0U << 3U)  /* SCS[3] */
+                    | (uint32)((uint32)0U << 4U)  /* SCS[4] */
+                    | (uint32)((uint32)0U << 5U)  /* SCS[5] */
+                    | (uint32)((uint32)0U << 8U)  /* ENA */
+                    | (uint32)((uint32)0U << 9U)  /* CLK */
+                    | (uint32)((uint32)0U << 10U)  /* SIMO */
+                    | (uint32)((uint32)0U << 11U); /* SOMI */
+
+    /** - SPI3 Port pullup / pulldown selection */
+    spiREG3->PC8  =   (uint32)((uint32)1U << 0U)  /* SCS[0] */
+                    | (uint32)((uint32)1U << 1U)  /* SCS[1] */
+                    | (uint32)((uint32)1U << 2U)  /* SCS[2] */
+                    | (uint32)((uint32)1U << 3U)  /* SCS[3] */
+                    | (uint32)((uint32)1U << 4U)  /* SCS[4] */
+                    | (uint32)((uint32)1U << 5U)  /* SCS[5] */
+                    | (uint32)((uint32)1U << 8U)  /* ENA */
+                    | (uint32)((uint32)1U << 9U)  /* CLK */
+                    | (uint32)((uint32)1U << 10U)  /* SIMO */
+                    | (uint32)((uint32)1U << 11U); /* SOMI */
+
+    /** - SPI3 Port pullup / pulldown enable*/
+    spiREG3->PC7  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */
+                    | (uint32)((uint32)0U << 1U)  /* SCS[1] */
+                    | (uint32)((uint32)0U << 2U)  /* SCS[2] */
+                    | (uint32)((uint32)0U << 3U)  /* SCS[3] */
+                    | (uint32)((uint32)0U << 4U)  /* SCS[4] */
+                    | (uint32)((uint32)0U << 5U)  /* SCS[5] */
+                    | (uint32)((uint32)0U << 8U)  /* ENA */
+                    | (uint32)((uint32)1U << 9U)  /* CLK */
+                    | (uint32)((uint32)0U << 10U)  /* SIMO */
+                    | (uint32)((uint32)0U << 11U); /* SOMI */
+
+    /* SPI3 set all pins to functional */
+    spiREG3->PC0  =   (uint32)((uint32)1U << 0U)  /* SCS[0] */
+                    | (uint32)((uint32)1U << 1U)  /* SCS[1] */
+                    | (uint32)((uint32)1U << 2U)  /* SCS[2] */
+                    | (uint32)((uint32)1U << 3U)  /* SCS[3] */
+                    | (uint32)((uint32)1U << 4U)  /* SCS[4] */
+                    | (uint32)((uint32)1U << 5U)  /* SCS[5] */
+                    | (uint32)((uint32)1U << 8U)  /* ENA */
+                    | (uint32)((uint32)1U << 9U)  /* CLK */
+                    | (uint32)((uint32)1U << 10U)  /* SIMO */
+                    | (uint32)((uint32)1U << 11U); /* SOMI */
+
+    /** - Initialize TX and RX data buffer Status */
+    g_spiPacket_t[2U].tx_data_status  = SPI_READY;
+    g_spiPacket_t[2U].rx_data_status  = SPI_READY;
+
+    /** - Finally start SPI3 */
+    spiREG3->GCR1 = (spiREG3->GCR1 & 0xFEFFFFFFU) | 0x01000000U;
 
 
     /** @b initialize @b SPI4 */
@@ -679,6 +846,60 @@ void spiDisableNotification(spiBASE_t *spi, uint32 flags)
 
 
 
+/** @fn void spi3GetConfigValue(spi_config_reg_t *config_reg, config_value_type_t type)
+*   @brief Get the initial or current values of the configuration registers
+*
+*    @param[in] *config_reg: pointer to the struct to which the initial or current
+*                           value of the configuration registers need to be stored
+*    @param[in] type:     whether initial or current value of the configuration registers need to be stored
+*                        - InitialValue: initial value of the configuration registers will be stored
+*                                       in the struct pointed by config_reg
+*                        - CurrentValue: initial value of the configuration registers will be stored
+*                                       in the struct pointed by config_reg
+*
+*   This function will copy the initial or current value (depending on the parameter 'type')
+*   of the configuration registers to the struct pointed by config_reg
+*
+*/
+/* SourceId : SPI_SourceId_017 */
+/* DesignId : SPI_DesignId_015 */
+/* Requirements : HL_SR144 */
+void spi3GetConfigValue(spi_config_reg_t *config_reg, config_value_type_t type)
+{
+    if (type == InitialValue)
+    {
+        config_reg->CONFIG_GCR1  = SPI3_GCR1_CONFIGVALUE;
+        config_reg->CONFIG_INT0  = SPI3_INT0_CONFIGVALUE;
+        config_reg->CONFIG_LVL   = SPI3_LVL_CONFIGVALUE;
+        config_reg->CONFIG_PC0   = SPI3_PC0_CONFIGVALUE;
+        config_reg->CONFIG_PC1   = SPI3_PC1_CONFIGVALUE;
+        config_reg->CONFIG_PC6   = SPI3_PC6_CONFIGVALUE;
+        config_reg->CONFIG_PC7   = SPI3_PC7_CONFIGVALUE;
+        config_reg->CONFIG_PC8   = SPI3_PC8_CONFIGVALUE;
+        config_reg->CONFIG_DELAY = SPI3_DELAY_CONFIGVALUE;
+        config_reg->CONFIG_FMT0  = SPI3_FMT0_CONFIGVALUE;
+        config_reg->CONFIG_FMT1  = SPI3_FMT1_CONFIGVALUE;
+        config_reg->CONFIG_FMT2  = SPI3_FMT2_CONFIGVALUE;
+        config_reg->CONFIG_FMT3  = SPI3_FMT3_CONFIGVALUE;
+    }
+    else
+    {
+    /*SAFETYMCUSW 134 S MR:12.2 <APPROVED> "LDRA Tool issue" */
+        config_reg->CONFIG_GCR1  = spiREG3->GCR1;
+        config_reg->CONFIG_INT0  = spiREG3->INT0;
+        config_reg->CONFIG_LVL   = spiREG3->LVL;
+        config_reg->CONFIG_PC0   = spiREG3->PC0;
+        config_reg->CONFIG_PC1   = spiREG3->PC1;
+        config_reg->CONFIG_PC6   = spiREG3->PC6;
+        config_reg->CONFIG_PC7   = spiREG3->PC7;
+        config_reg->CONFIG_PC8   = spiREG3->PC8;
+        config_reg->CONFIG_DELAY = spiREG3->DELAY ;
+        config_reg->CONFIG_FMT0  = spiREG3->FMT0;
+        config_reg->CONFIG_FMT1  = spiREG3->FMT1;
+        config_reg->CONFIG_FMT2  = spiREG3->FMT2;
+        config_reg->CONFIG_FMT3  = spiREG3->FMT3;
+    }
+}
 
 /** @fn void spi4GetConfigValue(spi_config_reg_t *config_reg, config_value_type_t type)
 *   @brief Get the initial or current values of the configuration registers
@@ -739,6 +960,210 @@ void spi4GetConfigValue(spi_config_reg_t *config_reg, config_value_type_t type)
 
 
 
+/* USER CODE BEGIN (50) */
+/* USER CODE END */
+
+/** @fn void mibspi3LowLevelInterrupt(void)
+*   @brief Level 1 Interrupt for SPI3
+*/
+#pragma CODE_STATE(mibspi3LowLevelInterrupt, 32)
+#pragma INTERRUPT(mibspi3LowLevelInterrupt, IRQ)
+
+/* SourceId : SPI_SourceId_024 */
+/* DesignId : SPI_DesignId_016 */
+/* Requirements : HL_SR141, HL_SR142, HL_SR143 */
+void mibspi3LowLevelInterrupt(void)
+{
+
+/* USER CODE BEGIN (51) */
+/* USER CODE END */
+
+    uint32 flags = (spiREG3->FLG & 0x0000FFFFU) & (spiREG3->LVL & 0x035FU);
+    uint32 vec = spiREG3->INTVECT1;
+
+/* USER CODE BEGIN (52) */
+/* USER CODE END */
+
+    switch(vec)
+    {
+
+    case 0x24U: /* Receive Buffer Full Interrupt */
+             {
+                uint16 *destbuff;
+                destbuff = g_spiPacket_t[2U].rxdata_ptr;
+
+                *destbuff = (uint16)spiREG3->BUF;
+                /*SAFETYMCUSW 567 S MR:17.1,17.4 <APPROVED> "Pointer increment needed" */
+                g_spiPacket_t[2U].rxdata_ptr++;
+                g_spiPacket_t[2U].rx_length--;
+
+                if(g_spiPacket_t[2U].rx_length == 0U)
+                {
+                    spiREG3->INT0 = (spiREG3->INT0 & 0x0000FFFFU) & (~(uint32)0x0100U);
+                    g_spiPacket_t[2U].rx_data_status = SPI_COMPLETED;
+                    spiEndNotification(spiREG3);
+                }
+                break;
+             }
+
+    case 0x28U: /* Transmit Buffer Empty Interrupt */
+             {
+                 volatile uint32 SpiBuf;
+                 uint32 Chip_Select_Hold = 0U;
+                 uint32 WDelay = (g_spiPacket_t[2U].g_spiDataFormat.WDEL) ? 0x04000000U : 0U;
+                 SPIDATAFMT_t DataFormat = g_spiPacket_t[2U].g_spiDataFormat.DFSEL;
+                 uint8 ChipSelect = g_spiPacket_t[2U].g_spiDataFormat.CSNR;
+                 uint16 Tx_Data = *g_spiPacket_t[2U].txdata_ptr;
+
+                 g_spiPacket_t[2U].tx_length--;
+
+                 if(g_spiPacket_t[2U].tx_length == 0U)
+                 {
+                    Chip_Select_Hold = 0U;
+                 }
+                 else
+                 {
+                    Chip_Select_Hold = (g_spiPacket_t[2U].g_spiDataFormat.CS_HOLD) ? 0x10000000U : 0U;
+                 }
+
+                 spiREG3->DAT1 = ((uint32)DataFormat << 24U) |
+                                 ((uint32)ChipSelect << 16U) |
+                                 (WDelay)           |
+                                 (Chip_Select_Hold) |
+                                 (uint32)Tx_Data;
+
+                 /*SAFETYMCUSW 567 S MR:17.1,17.4 <APPROVED> "Pointer increment needed" */
+                 g_spiPacket_t[2U].txdata_ptr++;
+                 /* Dummy Receive read if no RX Interrupt enabled */
+                 if(((spiREG3->INT0 & 0x0000FFFFU)& 0x0100U) == 0U)
+                 {
+                     if((spiREG3->FLG & 0x00000100U) == 0x00000100U)
+                     {
+                         SpiBuf = spiREG3->BUF;
+                     }
+                 }
+
+                 if(g_spiPacket_t[2U].tx_length == 0U)
+                 {
+                    spiREG3->INT0 = (spiREG3->INT0 & 0x0000FFFFU) & (~(uint32)0x0200U); /* Disable Interrupt */
+                    g_spiPacket_t[2U].tx_data_status = SPI_COMPLETED;
+                    spiEndNotification(spiREG3);
+                }
+                break;
+             }
+
+    default: /* Clear Flags and return  */
+             spiREG3->FLG = flags;
+             spiNotification(spiREG3, flags & 0xFFU);
+             break;
+    }
+
+
+/* USER CODE BEGIN (53) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (54) */
+/* USER CODE END */
+
+/** @fn void mibspi3HighInterruptLevel(void)
+*   @brief Level 0 Interrupt for SPI3
+*/
+#pragma CODE_STATE(mibspi3HighInterruptLevel, 32)
+#pragma INTERRUPT(mibspi3HighInterruptLevel, IRQ)
+
+/* SourceId : SPI_SourceId_025 */
+/* DesignId : SPI_DesignId_016 */
+/* Requirements : HL_SR141, HL_SR142, HL_SR143 */
+void mibspi3HighInterruptLevel(void)
+{
+
+/* USER CODE BEGIN (55) */
+/* USER CODE END */
+
+    uint32 flags = (spiREG3->FLG & 0x0000FFFFU) & (~spiREG3->LVL & 0x035FU);
+    uint32 vec = spiREG3->INTVECT0;
+
+/* USER CODE BEGIN (56) */
+/* USER CODE END */
+
+    switch(vec)
+    {
+
+    case 0x24U: /* Receive Buffer Full Interrupt */
+             {
+                uint16 *destbuff;
+                destbuff = g_spiPacket_t[2U].rxdata_ptr;
+
+                *destbuff = (uint16)spiREG3->BUF;
+                /*SAFETYMCUSW 567 S MR:17.1,17.4 <APPROVED> "Pointer increment needed" */
+                g_spiPacket_t[2U].rxdata_ptr++;
+                g_spiPacket_t[2U].rx_length--;
+
+                if(g_spiPacket_t[2U].rx_length == 0U)
+                {
+                    spiREG3->INT0 = (spiREG3->INT0 & 0x0000FFFFU) & (~(uint32)0x0100U);
+                    g_spiPacket_t[2U].rx_data_status = SPI_COMPLETED;
+                    spiEndNotification(spiREG3);
+                }
+                break;
+             }
+
+    case 0x28U: /* Transmit Buffer Empty Interrupt */
+             {
+                 volatile uint32 SpiBuf;
+                 uint32 Chip_Select_Hold = 0U;
+                 uint32 WDelay = (g_spiPacket_t[2U].g_spiDataFormat.WDEL) ? 0x04000000U: 0U;
+                 SPIDATAFMT_t DataFormat = g_spiPacket_t[2U].g_spiDataFormat.DFSEL;
+                 uint8 ChipSelect = g_spiPacket_t[2U].g_spiDataFormat.CSNR;
+                 uint16 Tx_Data = *g_spiPacket_t[2U].txdata_ptr;
+
+                 g_spiPacket_t[2U].tx_length--;
+
+                 if(g_spiPacket_t[2U].tx_length == 0U)
+                 {
+                    Chip_Select_Hold = 0U;
+                 }
+                 else
+                 {
+                    Chip_Select_Hold = (g_spiPacket_t[2U].g_spiDataFormat.CS_HOLD) ? 0x10000000U : 0U;
+                 }
+
+                 spiREG3->DAT1 = ((uint32)DataFormat << 24U) |
+                                 ((uint32)ChipSelect << 16U) |
+                                 (WDelay)           |
+                                 (Chip_Select_Hold) |
+                                 (uint32)Tx_Data;
+
+                 /*SAFETYMCUSW 567 S MR:17.1,17.4 <APPROVED> "Pointer increment needed" */
+                 g_spiPacket_t[2U].txdata_ptr++;
+                 /* Dummy Receive read if no RX Interrupt enabled */
+                 if(((spiREG3->INT0 & 0x0000FFFFU)& 0x0100U) == 0U)
+                 {
+                     if((spiREG3->FLG & 0x00000100U) == 0x00000100U)
+                     {
+                         SpiBuf = spiREG3->BUF;
+                     }
+                 }
+
+                 if(g_spiPacket_t[2U].tx_length == 0U)
+                 {
+                    spiREG3->INT0 = (spiREG3->INT0 & 0x0000FFFFU) & (~(uint32)0x0200U); /* Disable Interrupt */
+                    g_spiPacket_t[2U].tx_data_status = SPI_COMPLETED;
+                    spiEndNotification(spiREG3);
+                }
+                break;
+             }
+
+    default: /* Clear Flags and return  */
+             spiREG3->FLG = flags;
+             spiNotification(spiREG3, flags & 0xFFU);
+             break;
+    }
+
+/* USER CODE BEGIN (57) */
+/* USER CODE END */
+}
 
 
 
