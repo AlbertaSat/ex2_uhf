@@ -135,7 +135,7 @@ unsigned long image_size;
 static unsigned char data_in[BUFFER_SIZE];
 static unsigned char data_out[BUFFER_SIZE];
 
-// Below use NI CAN - not being used
+// Below used for NI CAN - not being used
 // // Handle for Network Interface Object (receiver)
 // NCTYPE_OBJH		RxHandle = 0;
 // // Handle for the CAN object (transmitter)
@@ -164,6 +164,8 @@ void delay(void) {
 	while(delayval--);
 }
 
+// should turn the blinky code into binary data
+// that can be sent across using CAN
 void Get_BinaryData( char *filename )
 {
     FILE *file;
@@ -209,9 +211,20 @@ cleanup:
     fclose(file);
 }
 
-//////////////////////////////////////////////// main()
 //=========================================================================
 // MAIN PROGRAM
+// Recommend testing the different commands one at a time and
+// only progressing when the previous test passes
+
+// This code makes the assumption we use canREG1 to transmit and canREG2 to receive
+
+// I was unable to compile the code as I was unable to import several C libraries into my virtual machine 
+// This might be a VM specific issue however, as they should in theory be available automatically on windows devices
+
+// Some code will need to be changed once we decide how best to send longer messages using CAN 
+// (i.e. once we fully figure out CAN bi-directionality), it’s been marked with todo’s
+// Until then, it can just be commented out
+
 //=========================================================================
 void main(void)
 {
@@ -239,7 +252,7 @@ void main(void)
 
     /////////////
     /* Configure the CAN Network Interface Object */
-    // TODO: replace all these values
+	// for NI CAN - not used by us
 	// AttrIdList[0] =         NC_ATTR_BAUD_RATE;   
 	// AttrValueList[0] =      Baudrate;
 	// AttrIdList[1] =         NC_ATTR_START_ON_OPEN;
@@ -269,7 +282,391 @@ void main(void)
 	canEnableErrorNotification(canREG4);
 
 	/*==============================================================================
+    * COMMAND PING
+	* 
+	This command is used to receive an acknowledge command from the bootloader indicating that
+	communication has been established. This command has no data. If the device is present, 
+	it will respond with a CAN_COMMAND_PING back to the CAN update application.
+    *===============================================================================*/
+
+	// Transmit.DataLength = 0;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_PING;
+
+	fprintf(stderr, "Testing PING command\n");
+
+	uint8 ping_tx_data[D_COUNT][8] = {0};
+	uint8 *ping_tx_ptr = &ping_tx_data[0][0];	
+	uint32 ping_arbitrationId = CAN_COMMAND_PING;
+	uint8 rx_data1[D_COUNT] = {0};
+	uint8 *ping_rx_data;
+
+	canUpdateID(canREG1, canMESSAGE_BOX1, ping_arbitrationId);					
+	int status = canTransmit(canREG1, canMESSAGE_BOX1, ping_tx_ptr);	
+
+	if (status1 != 1) {
+		fprintf(stderr, "TX message box setup unsuccessful.\n");
+		fprintf(stderr, "status1 value: %i\n", status1);
+	}
+
+	fprintf(stderr, "Transmitted. Receiving..\n");
+
+	while(!canIsRxMessageArrived(canREG1, canMESSAGE_BOX1)){
+		canGetData(canREG2, canMESSAGE_BOX1, ping_rx_data);
+	}
+
+	// Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+
+	for(int i = 0; i < 8; i++){
+		fprintf(stderr, "rx = %d\n", ping_rx_data[i]);
+	}
+
+	// rcvID = ReceiveBuf[0].ArbitrationId;
+	// rcvData = ReceiveBuf[0].Data[0];
+    // rcvDataLen = ReceiveBuf[0].DataLength;
+	// if((rcvID != 0x05a6) && (rcvData != 0))
+	// {
+	// 	printf(" - COMMAND_PING failed!\n");
+	// 	return 0;
+	// }
+
+	/*==============================================================================
+    * COMMAND Download
+	* 
+	This command sets the base address for the download as well as the size of the data to write 
+	to the device. This command should be followed by a series of CAN_COMMAND_SEND_DATA that send
+	the actual image to be programmed to the device. The command consists of two 32-bit values. The
+	first 32-bit value is the address to start programming data into, while the second is the 
+	32-bit size of the data that will be sent.
+
+	This command also triggers an erasure of the full application area in the Flash. This Flash 
+	erase operation causes the command to take longer to send the CAN_COMMAND_ACK in response 
+	to the command, which should be taken into account by the CAN update application.
+    *===============================================================================*/
+
+    fprintf(stderr, "Testing DOWNLOAD command\n");
+
+	Get_BinaryData( filename );
+	ulAddress = 0x00020000;
+
+	// Leftover from NICAN stuff
+	// Transmit.DataLength = 8;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_DOWNLOAD;	
+	// Transmit.Data[0] = (ulAddress >> 24) & 0xff;
+	// Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
+	// Transmit.Data[2] = (ulAddress >> 8) & 0xff;
+	// Transmit.Data[3] = ulAddress & 0xff;
+	// Transmit.Data[4] = (image_size >> 24) & 0xff;
+	// Transmit.Data[5] = (image_size >> 16) & 0xff;
+	// Transmit.Data[6] = (image_size >> 8) & 0xff;
+	// Transmit.Data[7] = image_size & 0xff;
+
+	ping_arbitrationId = CAN_COMMAND_DOWNLOAD;
+	canUpdateID(canREG1, canMESSAGE_BOX1, ping_arbitrationId);
+
+	// todo: Decide how best to send multi-part messages
+	// ie, whether a delay should be used, a wait for an ack message, etc.
+	// the below code will need to be changed to reflect that 
+
+	unsigned char transmit_data[8];
+	transmit_data[0] = (ulAddress >> 24) & 0xff;
+	transmit_data[1] = (ulAddress >> 16) & 0Xff;
+	transmit_data[2] = (ulAddress >> 8) & 0xff;
+	transmit_data[3] = ulAddress & 0xff;
+	transmit_data[4] = (image_size >> 24) & 0xff;
+	transmit_data[5] = (image_size >> 16) & 0xff;
+	transmit_data[6] = (image_size >> 8) & 0xff;
+	transmit_data[7] = image_size & 0xff;
+
+	status1 = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[0]);
+	status2 = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[1]);
+	status3 = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[2]);
+	status4 = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[3]);
+
+	// if (status1 + status2 + status3 + status4 != 4) {
+	// 	fprintf(stderr, "TX message box setup unsuccessful.");
+	// 	fprintf(stderr, "status1 value: %i", status1);
+	// 	fprintf(stderr, "status2 value: %i", status2);
+	// 	fprintf(stderr, "status3 value: %i", status3);
+	// 	fprintf(stderr, "status4 value: %i", status4);
+	// }
+
+	rx_data1 = {0};
+	rx_data2 = {0};
+	rx_data3 = {0};
+	rx_data4 = {0};
+
+	while(!canIsRxMessageArrived(canREG1,canMESSAGE_BOX1)){
+		canGetData(canREG2, canMESSAGE_BOX1, rx_data1);
+	}
+	while(!canIsRxMessageArrived(canREG2,canMESSAGE_BOX1)){
+		canGetData(canREG2, canMESSAGE_BOX1, rx_data2);
+	}
+	while(!canIsRxMessageArrived(canREG3,canMESSAGE_BOX1)){
+		canGetData(canREG2, canMESSAGE_BOX1, rx_data3);
+	}
+	while(!canIsRxMessageArrived(canREG4,canMESSAGE_BOX1)){
+		canGetData(canREG2, canMESSAGE_BOX1, rx_data4);
+	}
+
+	// not applicable here because we aren't perfroming a loopback
+	// todo: find a way to test that the code is received on the other board 
+	// can probably add code to wait for an acknowledgement message here
+
+	// for(int i = 0; i < 8; i++){
+	// 	if(tx_data1[i] != rx_data1[i]){
+	// 		fprintf(stderr, "can 1, index = %d error\n", i);
+	// 		fprintf(stderr, "tx = %d, rx = %d\n", tx_data1[i], rx_data1[i]);
+	// 	}
+	// 	else if(tx_data2[i] != rx_data2[i]){
+	// 		fprintf(stderr,"can 2, index = %d error\n", i);
+	// 	}
+	// 	else if(tx_data3[i] != rx_data3[i]){
+	// 		fprintf(stderr,"can 3, index = %d error\n", i);
+	// 	}
+	// 	else if(tx_data4[i] != rx_data4[i]){
+	// 		fprintf(stderr,"can 4, index = %d error\n", i);
+	// 	}
+		// else if(i == 7){
+		// 	fprintf(stderr,"Checking tx and rx complete");
+		// }
+	// }
+
+	/*==============================================================================
+    * COMMAND Sent Data
+	* 
+	This command should only follow a CAN_COMMAND_DOWNLOAD command or another
+	CAN_COMMAND_SEND_DATA command when more data is needed. Consecutive send data commands 
+	automatically increment the address and continue programming from the previous location. 
+
+	The transfer size is limited to 8 bytes at a time based on the maximum size
+	of an individual CAN transmission. The command terminates programming once the number 
+	of bytes indicated by the CAN_COMMAND_DOWNLOAD command have been received.
+
+	The CAN bootloader sends a CAN_COMMAND_ACK in response to each send data command to
+	allow the CAN update application to throttle the data going to the device and not 
+	overrun the bootloader with data.
+
+	This command also triggers the programming of the application area into the Flash. 
+	This Flash programming operation causes the command to take longer to send the 
+	CAN_COMMAND_ACK in response to the command, which should be taken into account by 
+	the CAN update application.
+
+	The LED D7 is flashing until the application update is complete.
+    *===============================================================================*/
+
+	fprintf(stderr, "Testing SENT DATA command\n");
+
+   	Get_BinaryData( filename );
+	// ulAddress = 0x00020000;
+
+	// Transmit.DataLength = 8;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_SEND_DATA;	
+	// ulLength = image_size;
+
+	uint8 send_tx_data[D_COUNT][8] = {0};
+	uint8 *send_tx_ptr = &send_tx_data[0][0];
+
+	ping_arbitrationId = CAN_COMMAND_SEND_DATA;
+	canUpdateID(canREG1, canMESSAGE_BOX1, ping_arbitrationId);
+
+	// todo: Convert the following block of code from using NICAN code 
+	// to using CAN API code instead.
+	// Holding off on converting this until we decide how best to send
+	// multi-part messages
+	// ie, whether a delay should be used, a wait for an ack message, etc.
+
+    //Loop through the data in the code to be downloaded.
+    for(ulOffset = 0; ulOffset < ulLength; ulOffset += 8)
+    {
+        // Build a send data command.
+        for(ulIdx = 0; ulIdx < 8; ulIdx++)
+        {
+           	Transmit.Data[ulIdx] = image[ulOffset + ulIdx];
+        }
+
+        // See if the entire buffer contains valid data to be downloaded.
+        if((ulOffset + ulIdx) > ulLength)
+        {
+			Transmit.DataLength = ulLength - ulOffset;
+            // Send the send data command with the remainder of the data to be downloaded.
+			Sleep(100);
+			Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
+			if (Status < 0) 
+			{
+				PrintStat(Status, "ncWrite");
+			}
+
+			//Get the ACK
+			Sleep(10000);
+			Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+			if (Status < 0)
+			{
+					PrintStat(Status, "ncReadMult");
+			}
+			rcvID = ReceiveBuf[0].ArbitrationId;
+			rcvData = ReceiveBuf[0].Data[0];
+			rcvDataLen = ReceiveBuf[0].DataLength;
+			if((rcvID != 0x07F4) && (rcvData != 0))
+			{
+				printf(" - COMMAND_SEND_DATA failed!\n");
+				return 0;
+			}
+        }
+        else
+        {
+			Transmit.DataLength = 8;
+            // Send the send data command with the remainder of the data to be downloaded.
+			Sleep(100);
+			do{
+				Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
+			}while(Status < 0);
+			if (Status < 0) 
+			{
+				PrintStat(Status, "ncWrite");
+			}
+			Sleep(100);
+			//Get the ACK
+			do{
+				Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+			} while (Status < 0);
+				
+			if (Status < 0)
+			{
+					PrintStat(Status, "ncReadMult");
+			}
+			rcvID = ReceiveBuf[0].ArbitrationId;
+			rcvData = ReceiveBuf[0].Data[0];
+			rcvDataLen = ReceiveBuf[0].DataLength;
+			if((rcvID != 0x05a6) && (rcvData != 0))
+			{
+				printf(" - COMMAND_SEND_DATA failed!\n");
+				return 0;
+			}
+        }
+    }
+
+   /*==============================================================================
+    * COMMAND RUN
+	* 
+	This command is used to tell the CAN boot loader to run the application located at
+	APP_START_ADDRESS. This is used after downloading a new image to the microcontroller 
+	to cause the new application to start from a software reset. The normal boot sequence 
+	occurs and the image runs as if from a hardware reset
+    *===============================================================================*/
+
+    fprintf(stderr, "Testing RUN command\n");
+
+    // ulAddress = 0x00020000;
+
+	
+	// Transmit.DataLength = 4;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_RUN;
+
+	ping_arbitrationId = CAN_COMMAND_RUN;
+	canUpdateID(canREG1, canMESSAGE_BOX1, ping_arbitrationId);
+	uint8 *run_rx_data;
+
+	// Transmit.Data[0] = (ulAddress >> 24) & 0xff;
+	// Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
+	// Transmit.Data[2] = (ulAddress >> 8) & 0xff;
+	// Transmit.Data[3] = ulAddress & 0xff;
+
+	uint8 run_tx_data[D_COUNT][8] = {0};
+	uint8 *run_tx_ptr = &run_tx_data[0][0];
+
+	status = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &run_tx_ptr[0]);
+
+	// receive the response
+	while(!canIsRxMessageArrived(canREG1, canMESSAGE_BOX1)){
+		canGetData(canREG2, canMESSAGE_BOX1, run_rx_data);
+	}
+
+	for(int i = 0; i < 8; i++){
+		fprintf(stderr, "rx = %d\n", run_rx_data[i]);
+	}	
+
+	// Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+	// if (Status < 0)
+	// {
+	// 		PrintStat(Status, "ncReadMult");
+	// }
+	// rcvID = ReceiveBuf[0].ArbitrationId;
+	// rcvData = ReceiveBuf[0].Data[0];
+ 	//    rcvDataLen = ReceiveBuf[0].DataLength;
+	// if((rcvID != 0x05a6) && (rcvData != 0))
+	// {
+	// 	printf(" - COMMAND_DOWNLOAD failed!\n");
+	// 	return 0;
+	// }
+
+	Sleep(100);
+
+   /*==============================================================================
+    * COMMAND RESET
+	* 
+	This command is used to tell the CAN bootloader to reset the microcontroller. This 
+	is used after downloading a new image to the microcontroller to cause the new 
+	application or the new bootloader to start from a reset. The normal boot sequence 
+	occurs and the image runs as if from a hardware reset. It can also be used to reset 
+	the bootloader if a critical error occurs and the CAN update application needs to 
+	restart communication with the bootloader.
+    *===============================================================================*/
+
+	fprintf(stderr, "Testing RESET command\n");
+
+ 	// Transmit.DataLength = 0;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_RESET;	
+
+	ping_arbitrationId = CAN_COMMAND_RESET;
+	canUpdateID(canREG1, canMESSAGE_BOX1, ping_arbitrationId);
+	uint8 *reset_rx_data;
+
+	uint8 reset_tx_data[D_COUNT][8] = {0};
+	uint8 *reset_tx_ptr = &reset_tx_data[0][0];
+
+	status = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &reset_tx_ptr[0]);	
+
+	// receive the response
+	while(!canIsRxMessageArrived(canREG1, canMESSAGE_BOX1)){
+		canGetData(canREG2, canMESSAGE_BOX1, reset_rx_data);
+	}
+
+	for(int i = 0; i < 8; i++){
+		fprintf(stderr, "rx = %d\n", reset_rx_data[i]);
+	}	
+	// todo: determine what a successful response is 
+
+	// Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+	// if (Status < 0)
+	// {
+	// 		PrintStat(Status, "ncReadMult");
+	// }
+	// rcvID = ReceiveBuf[0].ArbitrationId;
+	// rcvData = ReceiveBuf[0].Data[0];
+ 	//    rcvDataLen = ReceiveBuf[0].DataLength;
+	// if((rcvID != 0x05a6) && (rcvData != 0))
+	// {
+	// 	printf(" - COMMAND_DOWNLOAD failed!\n");
+	// 	return 0;
+	// }
+
+	Sleep(100);
+
+    fprintf(stderr, "Application Code has been downloaded to flash correctly!!\n");
+
+	return(0);
+
+
+
+   /*==============================================================================
     * Basic Test
+    * Old code for testing the CAN interface
+    * This shouldn't be used for testing the bootloader
     *===============================================================================*/
    /*
     int status1;
@@ -330,210 +727,14 @@ void main(void)
 		}
 	}
 */
-	/*==============================================================================
-    * COMMAND PING
-	* 
-	This command is used to receive an acknowledge command from the bootloader indicating that
-	communication has been established. This command has no data. If the device is present, 
-	it will respond with a CAN_COMMAND_PING back to the CAN update application.
-    *===============================================================================*/
-
-	// Transmit.DataLength = 0;
-	// Transmit.IsRemote = 0;
-	// Transmit.ArbitrationId = CAN_COMMAND_PING;
-
-	uint8 ping_tx_data[D_COUNT][8] = {0};
-	uint8 *ping_tx_ptr = &ping_tx_data[0][0];	
-	uint32 ping_arbitrationId = CAN_COMMAND_PING;
-	uint8 rx_data1[D_COUNT] = {0};
-
-	canUpdateID(canREG1, canMESSAGE_BOX1, ping_arbitrationId);					
-	int status = canTransmit(canREG1, canMESSAGE_BOX1, ping_tx_ptr);	
-
-	if (status1 != 1) {
-		fprintf(stderr, "TX message box setup unsuccessful.");
-		fprintf(stderr, "status1 value: %i", status1);
-	}
-
-	fprintf(stderr, "Transmitted. Receiving..");
-
-	while(!canIsRxMessageArrived(canREG1, canMESSAGE_BOX1)){
-		canGetData(canREG1, canMESSAGE_BOX1, ping_rx_data1);
-	}
-
-	// Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
-
-	for(int i = 0; i < 8; i++){
-		fprintf(stderr, "rx = %d\n", ping_rx_data1[i]);
-	}
-
-	// rcvID = ReceiveBuf[0].ArbitrationId;
-	// rcvData = ReceiveBuf[0].Data[0];
-    // rcvDataLen = ReceiveBuf[0].DataLength;
-	// if((rcvID != 0x05a6) && (rcvData != 0))
-	// {
-	// 	printf(" - COMMAND_PING failed!\n");
-	// 	return 0;
-	// }
-
-	/*==============================================================================
-    * COMMAND Download
-	* 
-	This command sets the base address for the download as well as the size of the data to write 
-	to the device. This command should be followed by a series of CAN_COMMAND_SEND_DATA that send
-	the actual image to be programmed to the device. The command consists of two 32-bit values. The
-	first 32-bit value is the address to start programming data into, while the second is the 
-	32-bit size of the data that will be sent.
-
-	This command also triggers an erasure of the full application area in the Flash. This Flash 
-	erase operation causes the command to take longer to send the CAN_COMMAND_ACK in response 
-	to the command, which should be taken into account by the CAN update application.
-    *===============================================================================*/
-	Get_BinaryData( filename );
-	ulAddress = 0x00020000;
-
-	// todo: create an ID
-
-	// Leftover from NICAN stuff
-	// Transmit.DataLength = 8;
-	// Transmit.IsRemote = 0;
-	// Transmit.ArbitrationId = CAN_COMMAND_DOWNLOAD;	
-	// Transmit.Data[0] = (ulAddress >> 24) & 0xff;
-	// Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
-	// Transmit.Data[2] = (ulAddress >> 8) & 0xff;
-	// Transmit.Data[3] = ulAddress & 0xff;
-	// Transmit.Data[4] = (image_size >> 24) & 0xff;
-	// Transmit.Data[5] = (image_size >> 16) & 0xff;
-	// Transmit.Data[6] = (image_size >> 8) & 0xff;
-	// Transmit.Data[7] = image_size & 0xff;
-
-	unsigned char transmit_data[8];
-	transmit_data[0] = (ulAddress >> 24) & 0xff;
-	transmit_data[1] = (ulAddress >> 16) & 0Xff;
-	transmit_data[2] = (ulAddress >> 8) & 0xff;
-	transmit_data[3] = ulAddress & 0xff;
-	transmit_data[4] = (image_size >> 24) & 0xff;
-	transmit_data[5] = (image_size >> 16) & 0xff;
-	transmit_data[6] = (image_size >> 8) & 0xff;
-	transmit_data[7] = image_size & 0xff;
-
-	status1 = canTransmit(canREG1, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[0]);
-	status2 = canTransmit(canREG2, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[1]);
-	status3 = canTransmit(canREG3, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[2]);
-	status4 = canTransmit(canREG4, canMESSAGE_BOX1, (const uint8 *) &download_start_addr_info[3]);
-
-	if (status1 + status2 + status3 + status4 != 4) {
-		fprintf(stderr, "TX message box setup unsuccessful.");
-		fprintf(stderr, "status1 value: %i", status1);
-		fprintf(stderr, "status2 value: %i", status2);
-		fprintf(stderr, "status3 value: %i", status3);
-		fprintf(stderr, "status4 value: %i", status4);
-	}
-
-	rx_data1 = {0};
-	rx_data2 = {0};
-	rx_data3 = {0};
-	rx_data4 = {0};
-
-	while(!canIsRxMessageArrived(canREG1,canMESSAGE_BOX1)){
-		canGetData(canREG1, canMESSAGE_BOX1, rx_data1);
-	}
-	while(!canIsRxMessageArrived(canREG2,canMESSAGE_BOX1)){
-		canGetData(canREG3, canMESSAGE_BOX1, rx_data2);
-	}
-	while(!canIsRxMessageArrived(canREG3,canMESSAGE_BOX1)){
-		canGetData(canREG3, canMESSAGE_BOX1, rx_data3);
-	}
-	while(!canIsRxMessageArrived(canREG4,canMESSAGE_BOX1)){
-		canGetData(canREG4, canMESSAGE_BOX1, rx_data4);
-	}
-
-	// likely not applicable here because it isn't a loopback
-	// todo: find a way to test that the code is received on the other board
-	for(int i = 0; i < 8; i++){
-		if(tx_data1[i] != rx_data1[i]){
-			fprintf(stderr, "can 1, index = %d error\n", i);
-			fprintf(stderr, "tx = %d, rx = %d\n", tx_data1[i], rx_data1[i]);
-		}
-		else if(tx_data2[i] != rx_data2[i]){
-			fprintf(stderr,"can 2, index = %d error\n", i);
-		}
-		else if(tx_data3[i] != rx_data3[i]){
-			fprintf(stderr,"can 3, index = %d error\n", i);
-		}
-		else if(tx_data4[i] != rx_data4[i]){
-			fprintf(stderr,"can 4, index = %d error\n", i);
-		}
-
-		else if(i == 7){
-			fprintf(stderr,"Checking tx and rx complete");
-		}
-	}
-
-	/*==============================================================================
-    * COMMAND Sent Data
-	* 
-	This command should only follow a CAN_COMMAND_DOWNLOAD command or another
-	CAN_COMMAND_SEND_DATA command when more data is needed. Consecutive send data commands 
-	automatically increment the address and continue programming from the previous location. 
-
-	The transfer size is limited to 8 bytes at a time based on the maximum size
-	of an individual CAN transmission. The command terminates programming once the number 
-	of bytes indicated by the CAN_COMMAND_DOWNLOAD command have been received.
-
-	The CAN bootloader sends a CAN_COMMAND_ACK in response to each send data command to
-	allow the CAN update application to throttle the data going to the device and not 
-	overrun the bootloader with data.
-
-	This command also triggers the programming of the application area into the Flash. 
-	This Flash programming operation causes the command to take longer to send the 
-	CAN_COMMAND_ACK in response to the command, which should be taken into account by 
-	the CAN update application.
-
-	The LED D7 is flashing until the application update is complete.
-    *===============================================================================*/
-
-   // ...
-
-   /*==============================================================================
-    * COMMAND RUN
-	* 
-	This command is used to tell the CAN boot loader to run the application located at
-	APP_START_ADDRESS. This is used after downloading a new image to the microcontroller 
-	to cause the new application to start from a software reset. The normal boot sequence 
-	occurs and the image runs as if from a hardware reset
-    *===============================================================================*/
-
-   // ...
-
-   /*==============================================================================
-    * COMMAND RESET
-	* 
-	This command is used to tell the CAN bootloader to reset the microcontroller. This 
-	is used after downloading a new image to the microcontroller to cause the new 
-	application or the new bootloader to start from a reset. The normal boot sequence 
-	occurs and the image runs as if from a hardware reset. It can also be used to reset 
-	the bootloader if a critical error occurs and the CAN update application needs to 
-	restart communication with the bootloader.
-    *===============================================================================*/
-
-   // ...
-
-   // todo: try out CAN_COMMAND_REQUEST stuff
-
-	return(0);
 
 
 	//===========================================================================================================
 	//===========================================================================================================
-	// Below is the original test code meant to use the NICAN device
+	// Below is the original test code meant to use a NICAN interface  device
 	// It's been left below for reference
 	//===========================================================================================================
 	//===========================================================================================================
-
-
-
-
 
     /*==============================================================================
     * COMMAND PING
@@ -606,167 +807,164 @@ void main(void)
     * COMMAND Sent Data
     *===============================================================================*/
 
-	Get_BinaryData( filename );
-	ulAddress = 0x00020000;
+	// Get_BinaryData( filename );
+	// ulAddress = 0x00020000;
 
-	Transmit.DataLength = 8;
-	Transmit.IsRemote = 0;
-	Transmit.ArbitrationId = CAN_COMMAND_SEND_DATA;	
-	ulLength = image_size;
+	// Transmit.DataLength = 8;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_SEND_DATA;	
+	// ulLength = image_size;
 
-    //#3, Loop through the data in the code to be downloaded.
-    for(ulOffset = 0; ulOffset < ulLength; ulOffset += 8)
-    {
-        // Build a send data command.
-        for(ulIdx = 0; ulIdx < 8; ulIdx++)
-        {
-           	Transmit.Data[ulIdx] = image[ulOffset + ulIdx];
-        }
+ //    //#3, Loop through the data in the code to be downloaded.
+ //    for(ulOffset = 0; ulOffset < ulLength; ulOffset += 8)
+ //    {
+ //        // Build a send data command.
+ //        for(ulIdx = 0; ulIdx < 8; ulIdx++)
+ //        {
+ //           	Transmit.Data[ulIdx] = image[ulOffset + ulIdx];
+ //        }
 
-        // See if the entire buffer contains valid data to be downloaded.
-        if((ulOffset + ulIdx) > ulLength)
-        {
-			Transmit.DataLength = ulLength - ulOffset;
-            // Send the send data command with the remainder of the data to be downloaded.
-			Sleep(100);
-			Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
-			if (Status < 0) 
-			{
-				PrintStat(Status, "ncWrite");
-			}
+ //        // See if the entire buffer contains valid data to be downloaded.
+ //        if((ulOffset + ulIdx) > ulLength)
+ //        {
+	// 		Transmit.DataLength = ulLength - ulOffset;
+ //            // Send the send data command with the remainder of the data to be downloaded.
+	// 		Sleep(100);
+	// 		Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
+	// 		if (Status < 0) 
+	// 		{
+	// 			PrintStat(Status, "ncWrite");
+	// 		}
 
-			//Get the ACK
-			Sleep(10000);
-			Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
-			if (Status < 0)
-			{
-					PrintStat(Status, "ncReadMult");
-			}
-			rcvID = ReceiveBuf[0].ArbitrationId;
-			rcvData = ReceiveBuf[0].Data[0];
-			rcvDataLen = ReceiveBuf[0].DataLength;
-			if((rcvID != 0x07F4) && (rcvData != 0))
-			{
-				printf(" - COMMAND_SEND_DATA failed!\n");
-				return 0;
-			}
-        }
-        else
-        {
-			Transmit.DataLength = 8;
-            // Send the send data command with the remainder of the data to be downloaded.
-			Sleep(100);
-			do{
-				Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
-			}while(Status < 0);
-			if (Status < 0) 
-			{
-				PrintStat(Status, "ncWrite");
-			}
-			Sleep(100);
-			//Get the ACK
-			do{
-				Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
-			} while (Status < 0);
+	// 		//Get the ACK
+	// 		Sleep(10000);
+	// 		Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+	// 		if (Status < 0)
+	// 		{
+	// 				PrintStat(Status, "ncReadMult");
+	// 		}
+	// 		rcvID = ReceiveBuf[0].ArbitrationId;
+	// 		rcvData = ReceiveBuf[0].Data[0];
+	// 		rcvDataLen = ReceiveBuf[0].DataLength;
+	// 		if((rcvID != 0x07F4) && (rcvData != 0))
+	// 		{
+	// 			printf(" - COMMAND_SEND_DATA failed!\n");
+	// 			return 0;
+	// 		}
+ //        }
+ //        else
+ //        {
+	// 		Transmit.DataLength = 8;
+ //            // Send the send data command with the remainder of the data to be downloaded.
+	// 		Sleep(100);
+	// 		do{
+	// 			Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
+	// 		}while(Status < 0);
+	// 		if (Status < 0) 
+	// 		{
+	// 			PrintStat(Status, "ncWrite");
+	// 		}
+	// 		Sleep(100);
+	// 		//Get the ACK
+	// 		do{
+	// 			Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+	// 		} while (Status < 0);
 				
-			if (Status < 0)
-			{
-					PrintStat(Status, "ncReadMult");
-			}
-			rcvID = ReceiveBuf[0].ArbitrationId;
-			rcvData = ReceiveBuf[0].Data[0];
-			rcvDataLen = ReceiveBuf[0].DataLength;
-			if((rcvID != 0x05a6) && (rcvData != 0))
-			{
-				printf(" - COMMAND_SEND_DATA failed!\n");
-				return 0;
-			}
-        }
-    }
+	// 		if (Status < 0)
+	// 		{
+	// 				PrintStat(Status, "ncReadMult");
+	// 		}
+	// 		rcvID = ReceiveBuf[0].ArbitrationId;
+	// 		rcvData = ReceiveBuf[0].Data[0];
+	// 		rcvDataLen = ReceiveBuf[0].DataLength;
+	// 		if((rcvID != 0x05a6) && (rcvData != 0))
+	// 		{
+	// 			printf(" - COMMAND_SEND_DATA failed!\n");
+	// 			return 0;
+	// 		}
+ //        }
+ //    }
 
 
     /*==============================================================================
     * COMMAND RUN
     *===============================================================================*/
-	ulAddress = 0x00020000;
+	// ulAddress = 0x00020000;
 
 	
-	Transmit.DataLength = 4;
-	Transmit.IsRemote = 0;
-	Transmit.ArbitrationId = CAN_COMMAND_RUN;	
+	// Transmit.DataLength = 4;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_RUN;	
 
-	Transmit.Data[0] = (ulAddress >> 24) & 0xff;
-	Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
-	Transmit.Data[2] = (ulAddress >> 8) & 0xff;
-	Transmit.Data[3] = ulAddress & 0xff;
+	// Transmit.Data[0] = (ulAddress >> 24) & 0xff;
+	// Transmit.Data[1] = (ulAddress >> 16) & 0Xff;
+	// Transmit.Data[2] = (ulAddress >> 8) & 0xff;
+	// Transmit.Data[3] = ulAddress & 0xff;
 
-	Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
-	if (Status < 0) 
-	{
-		PrintStat(Status, "ncWrite");
-	}
+	// Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
+	// if (Status < 0) 
+	// {
+	// 	PrintStat(Status, "ncWrite");
+	// }
 
-	Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
-	if (Status < 0)
-	{
-			PrintStat(Status, "ncReadMult");
-	}
-	rcvID = ReceiveBuf[0].ArbitrationId;
-	rcvData = ReceiveBuf[0].Data[0];
-    rcvDataLen = ReceiveBuf[0].DataLength;
-	if((rcvID != 0x05a6) && (rcvData != 0))
-	{
-		printf(" - COMMAND_DOWNLOAD failed!\n");
-		return 0;
-	}
+	// Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+	// if (Status < 0)
+	// {
+	// 		PrintStat(Status, "ncReadMult");
+	// }
+	// rcvID = ReceiveBuf[0].ArbitrationId;
+	// rcvData = ReceiveBuf[0].Data[0];
+ //    rcvDataLen = ReceiveBuf[0].DataLength;
+	// if((rcvID != 0x05a6) && (rcvData != 0))
+	// {
+	// 	printf(" - COMMAND_DOWNLOAD failed!\n");
+	// 	return 0;
+	// }
 
-	Sleep(100);
+	// Sleep(100);
 
     /*==============================================================================
     * COMMAND RESET
     *===============================================================================*/
-	Transmit.DataLength = 0;
-	Transmit.IsRemote = 0;
-	Transmit.ArbitrationId = CAN_COMMAND_RESET;	
+	// Transmit.DataLength = 0;
+	// Transmit.IsRemote = 0;
+	// Transmit.ArbitrationId = CAN_COMMAND_RESET;	
 
-	Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
-	if (Status < 0) 
-	{
-		PrintStat(Status, "ncWrite");
-	}
+	// Status= ncWrite(TxHandle, sizeof(Transmit), &Transmit);			
+	// if (Status < 0) 
+	// {
+	// 	PrintStat(Status, "ncWrite");
+	// }
 
-	Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
-	if (Status < 0)
-	{
-			PrintStat(Status, "ncReadMult");
-	}
-	rcvID = ReceiveBuf[0].ArbitrationId;
-	rcvData = ReceiveBuf[0].Data[0];
-    rcvDataLen = ReceiveBuf[0].DataLength;
-	if((rcvID != 0x05a6) && (rcvData != 0))
-	{
-		printf(" - COMMAND_DOWNLOAD failed!\n");
-		return 0;
-	}
+	// Status = ncRead(RxHandle, sizeof(ReceiveBuf), (void *)ReceiveBuf);
+	// if (Status < 0)
+	// {
+	// 		PrintStat(Status, "ncReadMult");
+	// }
+	// rcvID = ReceiveBuf[0].ArbitrationId;
+	// rcvData = ReceiveBuf[0].Data[0];
+ //    rcvDataLen = ReceiveBuf[0].DataLength;
+	// if((rcvID != 0x05a6) && (rcvData != 0))
+	// {
+	// 	printf(" - COMMAND_DOWNLOAD failed!\n");
+	// 	return 0;
+	// }
 
-	Sleep(100);
+	// Sleep(100);
 
-    /* Close the Network Interface Object */
-	Status = ncCloseObject(TxHandle);              
-	if (Status < 0)
-	{
-		PrintStat(Status, "ncCloseObject");
-	}
-	Status = ncCloseObject(RxHandle);              
-	if (Status < 0)
-	{
-		PrintStat(Status, "ncCloseObject");
-	}
+ //    /* Close the Network Interface Object */
+	// Status = ncCloseObject(TxHandle);              
+	// if (Status < 0)
+	// {
+	// 	PrintStat(Status, "ncCloseObject");
+	// }
+	// Status = ncCloseObject(RxHandle);              
+	// if (Status < 0)
+	// {
+	// 	PrintStat(Status, "ncCloseObject");
+	// }
 
-    printf("Application Code has been downloaded to flash correctly!!\n");
-	
-	return 0;    
-    
+ //    printf("Application Code has been downloaded to flash correctly!!\n");    
 }
 
 
