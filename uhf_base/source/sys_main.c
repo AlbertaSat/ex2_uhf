@@ -51,6 +51,8 @@
 #include <time.h>
 #include <math.h>
 #include "fec.h"
+#include "FreeRTOS.h"
+#include "os_task.h"
 /* USER CODE END */
 
 /* Include Files */
@@ -59,7 +61,7 @@
 
 /* USER CODE BEGIN (1) */
 #define RATE (1./2.)
-#define MAXBYTES 10000
+#define MAXBYTES 8
 
 double Gain = 32.0;
 int Verbose = 0;
@@ -74,16 +76,12 @@ int Verbose = 0;
 */
 
 /* USER CODE BEGIN (2) */
-/* USER CODE END */
-
-int main(void) {
-/* USER CODE BEGIN (3) */
-
-
+void vTask1(void *pvParameters){
+    int f = 20;
     //NOTE: ONLY THE _char and _port PARTS OF THE FEC LIBRARY ARE INCLUDED
     //SO THAT CCS BUILDS IT PROPERLY
 
-    int i,d,tr;
+    int i,tr;
     int sr=0,trials = 10000,errcnt,framebits=2048;
     long long int tot_errs=0;
     unsigned char bits[MAXBYTES];
@@ -92,9 +90,9 @@ int main(void) {
     unsigned char symbols[8*2*(MAXBYTES+6)];
     void *vp;
     extern char *optarg;
-    double extime;
+    //double extime;
     double gain,esn0,ebn0;
-    time_t t;
+    //time_t t;
     int badframes=0;
 
     ebn0 = -100;
@@ -141,7 +139,7 @@ int main(void) {
       framebits = MAXBYTES*8;
     }
     if((vp = create_viterbi27(framebits)) == NULL){
-      printf("create_viterbi27 failed\n");
+      fprintf(stderr,"create_viterbi27 failed\n");
       exit(1);
     }
     if(ebn0 != -100){
@@ -152,7 +150,7 @@ int main(void) {
        */
       gain = 1./sqrt(0.5/pow(10.,esn0/10.));
 
-      printf("nframes = %d framesize = %d ebn0 = %.2f dB gain = %g\n",trials,framebits,ebn0,Gain);
+      fprintf(stderr,"nframes = %d framesize = %d ebn0 = %.2f dB gain = %g\n",trials,framebits,ebn0,Gain);
 
       for(tr=0;tr<trials;tr++){
         /* Encode a frame of random data */
@@ -182,22 +180,22 @@ int main(void) {
         if(errcnt != 0)
       badframes++;
         if(Verbose > 1 && errcnt != 0){
-      printf("frame %d, %d errors: ",tr,errcnt);
+      fprintf(stderr,"frame %d, %d errors: ",tr,errcnt);
       for(i=0;i<framebits/8;i++){
-        printf("%02x",xordata[i]);
+        fprintf(stderr,"%02x",xordata[i]);
       }
-      printf("\n");
+      fprintf(stderr,"\n");
         }
         if(Verbose)
-      printf("BER %lld/%lld (%10.3g) FER %d/%d (%10.3g)\r",
+      fprintf(stderr,"BER %lld/%lld (%10.3g) FER %d/%d (%10.3g)\r",
              tot_errs,(long long)framebits*(tr+1),tot_errs/((double)framebits*(tr+1)),
              badframes,tr+1,(double)badframes/(tr+1));
         fflush(stdout);
       }
       if(Verbose > 1)
-        printf("nframes = %d framesize = %d ebn0 = %.2f dB gain = %g\n",trials,framebits,ebn0,Gain);
+        fprintf(stderr,"nframes = %d framesize = %d ebn0 = %.2f dB gain = %g\n",trials,framebits,ebn0,Gain);
       else if(Verbose == 0)
-        printf("BER %lld/%lld (%.3g) FER %d/%d (%.3g)\n",
+        fprintf(stderr,"BER %lld/%lld (%.3g) FER %d/%d (%.3g)\n",
            tot_errs,(long long)framebits*trials,tot_errs/((double)framebits*trials),
            badframes,tr+1,(double)badframes/(tr+1));
       else
@@ -206,7 +204,7 @@ int main(void) {
     } else {
       /* Do time trials */
       memset(symbols,127,sizeof(symbols));
-      printf("Starting time trials\n");
+      fprintf(stderr,"Starting time trials\n");
       //getrusage(RUSAGE_SELF,&start);
       for(tr=0;tr < trials;tr++){
         /* Initialize Viterbi decoder */
@@ -220,12 +218,42 @@ int main(void) {
       }
       //getrusage(RUSAGE_SELF,&finish);
       //extime = finish.ru_utime.tv_sec - start.ru_utime.tv_sec + 1e-6*(finish.ru_utime.tv_usec - start.ru_utime.tv_usec);
-      printf("Execution time for %d %d-bit frames: %.2f sec\n",trials,
-         framebits,extime);
-      printf("decoder speed: %g bits/s\n",trials*framebits/extime);
+//      fprintf(stderr,"Execution time for %d %d-bit frames: %.2f sec\n",trials,
+//         framebits,extime);
+//      fprintf(stderr,"decoder speed: %g bits/s\n",trials*framebits/extime);
+    }
+    while(1);
+}
+/* USER CODE END */
+
+int main(void)
+{
+/* USER CODE BEGIN (3) */
+
+
+
+    if(xTaskCreate( vTask1, "Task1", 1024, NULL, 1, NULL )!= pdTRUE)
+    {
+        /* Task could not be created */
+        while(1);
     }
 
+    /* Start the tasks and timer running. */
+    vTaskStartScheduler();
 
+    /*
+    int temp, delay;
+    delay = 0x200000;
+    gioInit();
+    gioSetDirection(gioPORTB, 0xFFFFFFFF);
+    while (1) {
+        gioToggleBit(gioPORTB, 1);
+        for (temp = 0; temp < delay; temp++);
+        gioToggleBit(gioPORTB, 1);
+        for (temp = 0; temp < delay; temp++);
+
+    }
+    */
 /* USER CODE END */
 
     return 0;
