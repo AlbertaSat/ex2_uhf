@@ -232,7 +232,7 @@ int main(void)
 
 
 
-    if(xTaskCreate( vTask1, "Task1", 1024, NULL, 1, NULL )!= pdTRUE)
+    if(xTaskCreate( vTask1, "Task1", 2048, NULL, 1, NULL )!= pdTRUE)
     {
         /* Task could not be created */
         while(1);

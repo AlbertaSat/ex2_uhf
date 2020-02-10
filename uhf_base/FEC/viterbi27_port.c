@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 //#include <memory.h>
+#include "FreeRTOS.h"
 #include <limits.h>
 #include "fec.h"
 
@@ -60,10 +61,10 @@ void *create_viterbi27_port(int len){
     int polys[2] = { V27POLYA, V27POLYB };
     set_viterbi27_polynomial_port(polys);
   }
-  if((vp = malloc(sizeof(struct v27))) == NULL)
+  if((vp = (struct v27 *)pvPortMalloc(sizeof(struct v27))) == NULL)
      return NULL;
-  if((vp->decisions = malloc((len+6)*sizeof(decision_t))) == NULL){
-    free(vp);
+  if((vp->decisions = pvPortMalloc((len+6)*sizeof(decision_t))) == NULL){
+    vPortFree(vp);
     return NULL;
   }
   init_viterbi27_port(vp,0);
