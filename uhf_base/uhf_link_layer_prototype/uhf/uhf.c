@@ -1,5 +1,6 @@
-#include <csp/csp.h>
+//#include <csp/csp.h>
 #include "spi.h"
+#include "uhf.h"
 
 //dummy values for now
 #define PREAMBLE_2FSK 1
@@ -8,10 +9,10 @@
 #define SPI_NUMBER spiREG3
 
 spiDAT1_t dataconfig1_t;
-dataconfig1_t.CS_HOLD = FALSE;
-dataconfig1_t.WDEL    = FALSE;
-dataconfig1_t.DFSEL   = SPI_FMT_0;
-dataconfig1_t.CSNR    = 0x00;
+//dataconfig1_t.CS_HOLD = FALSE;
+//dataconfig1_t.WDEL    = FALSE;
+//dataconfig1_t.DFSEL   = SPI_FMT_0;
+//dataconfig1_t.CSNR    = 0x00;
 
 
 //Not yet working, need to convert frame into array
@@ -59,7 +60,7 @@ int uhf_send(uint8_t* data){
    frame.preamble = PREAMBLE_2FSK;
    frame.sync_word = 16; //unique consistent value needs to be chosen for sync word
    frame.data = data; //MTU to be enforced at interface level, or here
-   uint32_t crc = get_crc32(frame);
+   uint32_t crc = get_crc32(&frame);
 
 
    //Should FEC be done here? or before data is passed to uhf_send.
@@ -67,9 +68,9 @@ int uhf_send(uint8_t* data){
 
 
    //add chip select gpio signal
-   spiTransmit(SPI_NUMBER, &dataconfig1_t, 1, frame->preamble);
-   spiTransmit(SPI_NUMBER, &dataconfig1_t, 2, frame->sync_word);
-   spiTransmit(SPI_NUMBER, &dataconfig1_t, frame->data_length, frame->data);//each block is 16 bits
+   spiTransmit(SPI_NUMBER, &dataconfig1_t, 1, frame.preamble);
+   spiTransmit(SPI_NUMBER, &dataconfig1_t, 2, frame.sync_word);
+   spiTransmit(SPI_NUMBER, &dataconfig1_t, frame.data_length, frame.data);//each block is 16 bits
    //what happens if data isn't a 16 bit multiple?
    //Add return 1 for error
 

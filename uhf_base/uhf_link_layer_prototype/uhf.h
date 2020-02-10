@@ -3,7 +3,7 @@
 #define _UHF_H_
 
 #include <stdint.h>
-#include <csp/csp.h>
+//#include <csp/csp.h>
 
 
 /** Interface to csp for UHF link layer */

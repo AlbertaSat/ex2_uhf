@@ -1,4 +1,0 @@
-I've included libcsp as a git submodule for development. In order to commit
-interface files to uhf repo they have to be outside of libcsp submodule.
-The Makefile will copy over the interface files to the
-appropriate libcsp locations and then compile.
