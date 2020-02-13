@@ -11,15 +11,12 @@
 typedef struct {
   uint16_t preamble;
   uint32_t sync_word;
-  //add sequence numbers?
-  uint8_t data_length;
+  uint16_t data_length; //allows for 65536 bytes of data, (acceptable UB)
   union __attribute__((__packed__)){
     uint8_t* data;
-    uint16_t* data16;
-    uint32_t* data32;
   };
-  //add crc
-  
+  uint16_t fec;
+  uint16_t crc;
 } uhf_frame_t;
 
 int uhf_init();
