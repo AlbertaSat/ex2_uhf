@@ -345,9 +345,9 @@ void spiInit(void)
     /** - SPI4 Port direction */
     spiREG4->PC1  =   (uint32)((uint32)1U << 0U)  /* SCS[0] */
                     | (uint32)((uint32)0U << 8U)  /* ENA */
-                    | (uint32)((uint32)1U << 9U)  /* CLK */
-                    | (uint32)((uint32)1U << 10U)  /* SIMO */
-                    | (uint32)((uint32)0U << 11U); /* SOMI */
+                    | (uint32)((uint32)0U << 9U)  /* CLK */
+                    | (uint32)((uint32)0U << 10U)  /* SIMO */
+                    | (uint32)((uint32)1U << 11U); /* SOMI */
 
     /** - SPI4 Port open drain enable */
     spiREG4->PC6  =   (uint32)((uint32)0U << 0U)  /* SCS[0] */
