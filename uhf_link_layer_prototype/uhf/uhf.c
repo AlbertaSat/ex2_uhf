@@ -1,5 +1,6 @@
 #include <csp/csp.h>
 #include "crc.h"
+#include <stdbool.h>
 // #include "spi.h"
 
 //dummy values for now
@@ -47,7 +48,28 @@ void compute_crc(uhf_frame_t* frame){
   frame->crc = get_crc16(frame_array, plaintext_size, crc_table);
 }
 
+bool validate_crc(uhf_frame_t* frame){
+  /*
+  Checks the frame data against appended crc.
 
+  :params frame: pointer to uhf frame
+
+  :returns: true if crc is consistent with data. otherwise false.
+  */
+  int quotient_size = sizeof(frame->data_length)
+                      + sizeof(frame->fec)
+                      + sizeof(frame->crc)
+                      + (int)(frame->data_length);
+  uint8_t frame_array[quotient_size];
+  break_short_into_byte(frame_array, 0, frame->data_length);
+  memcpy(&frame_array[2], frame->data[0], frame->data_length);
+  break_short_into_byte(frame_array, 2+frame->data_length, frame->fec);
+  break_short_into_byte(frame_array, 2+frame->data_length+2, frame->crc);
+  if(get_crc16(frame_array, quotient_size, crc_table) != 0){
+    return true;
+  }
+  return false;
+}
 
 int uhf_init(){
   //Should this include the init for the chip itself?
